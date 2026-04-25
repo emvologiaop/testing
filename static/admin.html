@@ -62,7 +62,9 @@
                 </div>
             </div>
 
+            <!-- Statistics Dashboard -->
             <div class="mailpro-card">
+                <h2 class="mailpro-admin-section-title">Dashboard Statistics</h2>
                 <div class="mailpro-stats">
                     <div class="mailpro-stat-card" id="mailpro-stat-total">
                         <div class="mailpro-stat-number" id="totalAccounts">-</div>
@@ -84,7 +86,197 @@
                 </div>
 
                 <div id="message" class="mailpro-message" role="status" aria-live="polite"></div>
+            </div>
 
+            <!-- Email Sending Section -->
+            <div class="mailpro-card">
+                <h2 class="mailpro-admin-section-title">Send Test Email</h2>
+                <div class="mailpro-form-section">
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group">
+                            <label for="sendFromEmail" class="mailpro-label">Send From:</label>
+                            <select id="sendFromEmail" class="mailpro-form-control" aria-label="Select sender email account">
+                                <option value="">-- Select an account --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group">
+                            <label for="sendToEmail" class="mailpro-label">To:</label>
+                            <input type="email" id="sendToEmail" class="mailpro-form-control" placeholder="recipient@example.com" aria-label="Email recipient">
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group">
+                            <label for="sendCcEmail" class="mailpro-label">Cc:</label>
+                            <input type="text" id="sendCcEmail" class="mailpro-form-control" placeholder="cc@example.com (comma-separated)" aria-label="Email CC recipients">
+                        </div>
+                        <div class="mailpro-form-group">
+                            <label for="sendBccEmail" class="mailpro-label">Bcc:</label>
+                            <input type="text" id="sendBccEmail" class="mailpro-form-control" placeholder="bcc@example.com (comma-separated)" aria-label="Email BCC recipients">
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group" style="grid-column: 1 / -1;">
+                            <label for="sendSubject" class="mailpro-label">Subject:</label>
+                            <input type="text" id="sendSubject" class="mailpro-form-control" placeholder="Email subject" aria-label="Email subject">
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group" style="grid-column: 1 / -1;">
+                            <label for="sendMessage" class="mailpro-label">Message:</label>
+                            <textarea id="sendMessage" class="mailpro-form-control mailpro-textarea" placeholder="Email message body" aria-label="Email message body" rows="6"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <div class="mailpro-form-group">
+                            <label for="sendIsHtml" class="mailpro-checkbox-label">
+                                <input type="checkbox" id="sendIsHtml" aria-label="Send as HTML email">
+                                Send as HTML
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mailpro-form-row">
+                        <button id="sendEmailBtn" class="mailpro-btn mailpro-btn-primary mailpro-btn-full" onclick="sendTestEmail()" aria-label="Send test email">
+                            Send Email
+                        </button>
+                        <button class="mailpro-btn mailpro-btn-secondary mailpro-btn-full" onclick="clearSendForm()" aria-label="Clear send form">
+                            Clear
+                        </button>
+                    </div>
+
+                    <div id="sendFeedback" class="mailpro-message" role="status" aria-live="polite"></div>
+                    <div id="rateLimitWarning" class="mailpro-rate-limit-warning" style="display: none;" role="alert" aria-live="assertive"></div>
+                </div>
+            </div>
+
+            <!-- Sending Statistics Section -->
+            <div class="mailpro-card">
+                <h2 class="mailpro-admin-section-title">Sending Statistics</h2>
+                <div class="mailpro-stats-mini">
+                    <div class="mailpro-stat-mini" id="selectedAccountInfo" style="display: none;">
+                        <div class="mailpro-stat-mini-label">Selected Account:</div>
+                        <div class="mailpro-stat-mini-value" id="selectedAccountEmail">-</div>
+                    </div>
+                </div>
+
+                <div class="mailpro-controls">
+                    <button class="mailpro-btn mailpro-btn-secondary" onclick="loadSendingStats()" aria-label="Refresh sending statistics">Refresh Stats</button>
+                </div>
+
+                <div class="mailpro-tabs">
+                    <button class="mailpro-tab-btn mailpro-tab-active" onclick="switchStatsTab('recent')" aria-label="View recent sends">Recent Sends</button>
+                    <button class="mailpro-tab-btn" onclick="switchStatsTab('failed')" aria-label="View failed sends">Failed Sends</button>
+                    <button class="mailpro-tab-btn" onclick="switchStatsTab('summary')" aria-label="View sending summary">Summary</button>
+                </div>
+
+                <div id="recentSendsTab" class="mailpro-tab-content mailpro-tab-active">
+                    <div class="mailpro-table-container">
+                        <table role="grid" aria-label="Recent email sends">
+                            <thead>
+                                <tr>
+                                    <th role="columnheader">Timestamp</th>
+                                    <th role="columnheader">Recipient</th>
+                                    <th role="columnheader">Subject</th>
+                                    <th role="columnheader">Total Recipients</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentSendsBody">
+                                <tr>
+                                    <td colspan="4" class="mailpro-loading">Select an account to view recent sends</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="failedSendsTab" class="mailpro-tab-content" style="display: none;">
+                    <div class="mailpro-table-container">
+                        <table role="grid" aria-label="Failed email sends">
+                            <thead>
+                                <tr>
+                                    <th role="columnheader">Timestamp</th>
+                                    <th role="columnheader">Recipient</th>
+                                    <th role="columnheader">Subject</th>
+                                    <th role="columnheader">Error</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failedSendsBody">
+                                <tr>
+                                    <td colspan="4" class="mailpro-loading">Select an account to view failed sends</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="summaryTab" class="mailpro-tab-content" style="display: none;">
+                    <div class="mailpro-summary-grid">
+                        <div class="mailpro-summary-card">
+                            <div class="mailpro-summary-label">Total Sent</div>
+                            <div class="mailpro-summary-value" id="totalSentCount">0</div>
+                        </div>
+                        <div class="mailpro-summary-card">
+                            <div class="mailpro-summary-label">Successful</div>
+                            <div class="mailpro-summary-value" id="successfulCount">0</div>
+                        </div>
+                        <div class="mailpro-summary-card">
+                            <div class="mailpro-summary-label">Failed</div>
+                            <div class="mailpro-summary-value" id="failedCount">0</div>
+                        </div>
+                        <div class="mailpro-summary-card">
+                            <div class="mailpro-summary-label">Last Send Time</div>
+                            <div class="mailpro-summary-value" id="lastSendTime">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Limiting & Account Details -->
+            <div class="mailpro-card">
+                <h2 class="mailpro-admin-section-title">Rate Limiting & Account Details</h2>
+                <div id="accountDetailsContainer" style="display: none;">
+                    <div class="mailpro-details-grid">
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Email:</div>
+                            <div class="mailpro-detail-value" id="detailEmail">-</div>
+                        </div>
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Account Status:</div>
+                            <div class="mailpro-detail-value" id="detailStatus">-</div>
+                        </div>
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Last Send:</div>
+                            <div class="mailpro-detail-value" id="detailLastSend">-</div>
+                        </div>
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Throttle Status:</div>
+                            <div class="mailpro-detail-value" id="detailThrottleStatus">-</div>
+                        </div>
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Rate Limit (min):</div>
+                            <div class="mailpro-detail-value">2 seconds</div>
+                        </div>
+                        <div class="mailpro-detail-item">
+                            <div class="mailpro-detail-label">Account Created:</div>
+                            <div class="mailpro-detail-value" id="detailCreated">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="noAccountSelected" style="text-align: center; color: #64748b; padding: 2rem;">
+                    Select an account from the accounts list to view details
+                </div>
+            </div>
+
+            <!-- Accounts Management -->
+            <div class="mailpro-card">
+                <h2 class="mailpro-admin-section-title">Account Management</h2>
                 <div class="mailpro-table-container">
                     <table id="accountsTable" role="grid" aria-label="MailPro Nafij connected accounts table">
                         <thead>
@@ -129,8 +321,11 @@
         // MailPro Nafij SEO Constants
         const MAILPRO_SITE_NAME = 'MailPro Nafij';
         const MAILPRO_ADMIN_CONTEXT = 'Administrator Panel';
+        const RATE_LIMIT_INTERVAL = 2000; // 2 seconds between emails
 
         let isLoggedIn = false;
+        let currentSelectedAccount = null;
+        let allAccounts = [];
 
         /**
          * Admin login function
@@ -208,7 +403,7 @@
         }
 
         /**
-         * Load all accounts from the backend API
+         * Load all accounts and populate sender dropdown
          */
         async function loadAccounts() {
             if (!isLoggedIn) return;
@@ -226,17 +421,18 @@
                 }
 
                 const data = await response.json();
-                const accounts = data.accounts || [];
+                allAccounts = data.accounts || [];
 
-                updateStats(accounts);
+                updateStats(allAccounts);
+                populateSenderDropdown(allAccounts);
 
-                if (accounts.length === 0) {
+                if (allAccounts.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No accounts connected to MailPro Nafij</td></tr>';
                     return;
                 }
 
-                tbody.innerHTML = accounts.map(account => `
-                    <tr>
+                tbody.innerHTML = allAccounts.map(account => `
+                    <tr onclick="selectAccountForDetails('${account.email}')" style="cursor: pointer;">
                         <td class="mailpro-email">${account.email}</td>
                         <td>
                             <span class="mailpro-status mailpro-status-${account.isPremium ? 'premium' : 'public'}">
@@ -248,10 +444,11 @@
                         <td>
                             <div class="mailpro-actions">
                                 ${account.isPremium
-                                    ? `<button class="mailpro-btn mailpro-btn-success" onclick="unlockAccount('${account.email}')">Unlock</button>`
-                                    : `<button class="mailpro-btn mailpro-btn-danger" onclick="lockAccount('${account.email}')">Lock</button>`
+                                    ? `<button class="mailpro-btn mailpro-btn-success" onclick="unlockAccount('${account.email}'); event.stopPropagation();">Unlock</button>`
+                                    : `<button class="mailpro-btn mailpro-btn-danger" onclick="lockAccount('${account.email}'); event.stopPropagation();">Lock</button>`
                                 }
-                                <a href="/inbox/${account.email}" class="mailpro-btn mailpro-btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">View Inbox</a>
+                                <a href="/inbox/${account.email}" class="mailpro-btn mailpro-btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;" onclick="event.stopPropagation();">View Inbox</a>
+                                <button class="mailpro-btn mailpro-btn-secondary" onclick="viewLockHistory('${account.email}'); event.stopPropagation();" title="View lock/unlock history">History</button>
                             </div>
                         </td>
                     </tr>
@@ -261,6 +458,334 @@
                 console.error('Error loading accounts:', error);
                 tbody.innerHTML = '<tr><td colspan="5" class="mailpro-error">Failed to load MailPro Nafij accounts. Check admin permissions.</td></tr>';
                 showMessage('Failed to load accounts: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * Populate sender email dropdown
+         */
+        function populateSenderDropdown(accounts) {
+            const dropdown = document.getElementById('sendFromEmail');
+            const currentValue = dropdown.value;
+
+            dropdown.innerHTML = '<option value="">-- Select an account --</option>' +
+                accounts.map(acc => `<option value="${acc.email}">${acc.email}</option>`).join('');
+
+            if (currentValue && accounts.find(acc => acc.email === currentValue)) {
+                dropdown.value = currentValue;
+            }
+        }
+
+        /**
+         * Select account for viewing details and stats
+         */
+        async function selectAccountForDetails(email) {
+            currentSelectedAccount = email;
+            document.getElementById('sendFromEmail').value = email;
+
+            // Update detail section
+            const account = allAccounts.find(acc => acc.email === email);
+            if (account) {
+                document.getElementById('accountDetailsContainer').style.display = 'block';
+                document.getElementById('noAccountSelected').style.display = 'none';
+
+                document.getElementById('detailEmail').textContent = account.email;
+                document.getElementById('detailStatus').textContent = account.isPremium ? 'Premium (Locked)' : 'Public (Unlocked)';
+                document.getElementById('detailCreated').textContent = formatDate(account.createdAt);
+
+                // Update throttle status
+                updateThrottleStatus(account);
+
+                // Load sending stats
+                loadSendingStats();
+            }
+        }
+
+        /**
+         * Update throttle status for selected account
+         */
+        function updateThrottleStatus(account) {
+            const lastSendElement = document.getElementById('detailLastSend');
+            const throttleElement = document.getElementById('detailThrottleStatus');
+
+            if (account.lastSentEmail) {
+                const lastSendTime = new Date(account.lastSentEmail);
+                lastSendElement.textContent = formatDate(account.lastSentEmail);
+
+                const timeSinceLastEmail = Date.now() - lastSendTime.getTime();
+                const secondsRemaining = Math.max(0, Math.ceil((RATE_LIMIT_INTERVAL - timeSinceLastEmail) / 1000));
+
+                if (secondsRemaining > 0) {
+                    throttleElement.textContent = `Throttled (${secondsRemaining}s remaining)`;
+                    throttleElement.style.color = '#ef4444';
+                } else {
+                    throttleElement.textContent = 'Ready to send';
+                    throttleElement.style.color = '#10b981';
+                }
+            } else {
+                lastSendElement.textContent = 'Never';
+                throttleElement.textContent = 'Ready to send';
+                throttleElement.style.color = '#10b981';
+            }
+        }
+
+        /**
+         * Send test email
+         */
+        async function sendTestEmail() {
+            const email = document.getElementById('sendFromEmail').value;
+            const to = document.getElementById('sendToEmail').value;
+            const cc = document.getElementById('sendCcEmail').value;
+            const bcc = document.getElementById('sendBccEmail').value;
+            const subject = document.getElementById('sendSubject').value;
+            const body = document.getElementById('sendMessage').value;
+            const isHtml = document.getElementById('sendIsHtml').checked;
+
+            const feedback = document.getElementById('sendFeedback');
+
+            // Validation
+            if (!email) {
+                showSendFeedback('Please select a sender account', 'error');
+                return;
+            }
+            if (!to) {
+                showSendFeedback('Please enter a recipient email', 'error');
+                return;
+            }
+            if (!subject) {
+                showSendFeedback('Please enter an email subject', 'error');
+                return;
+            }
+            if (!body) {
+                showSendFeedback('Please enter an email message', 'error');
+                return;
+            }
+
+            // Set loading state
+            const sendBtn = document.getElementById('sendEmailBtn');
+            const originalText = sendBtn.textContent;
+            sendBtn.textContent = 'Sending...';
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch('/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        to,
+                        cc: cc || undefined,
+                        bcc: bcc || undefined,
+                        subject,
+                        body,
+                        isHtml
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showSendFeedback(`Email sent successfully to ${result.recipients} recipient(s)!`, 'success');
+                    clearSendForm();
+
+                    // Refresh stats after 1 second
+                    setTimeout(() => {
+                        if (currentSelectedAccount === email) {
+                            loadSendingStats();
+                        }
+                        loadAccounts();
+                    }, 1000);
+                } else {
+                    showSendFeedback(result.error || 'Failed to send email', 'error');
+                }
+            } catch (error) {
+                console.error('Send email error:', error);
+                showSendFeedback('Error sending email: ' + error.message, 'error');
+            } finally {
+                sendBtn.textContent = originalText;
+                sendBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Clear send form
+         */
+        function clearSendForm() {
+            document.getElementById('sendToEmail').value = '';
+            document.getElementById('sendCcEmail').value = '';
+            document.getElementById('sendBccEmail').value = '';
+            document.getElementById('sendSubject').value = '';
+            document.getElementById('sendMessage').value = '';
+            document.getElementById('sendIsHtml').checked = false;
+            document.getElementById('sendFeedback').style.display = 'none';
+        }
+
+        /**
+         * Show send feedback
+         */
+        function showSendFeedback(text, type = 'success') {
+            const feedbackDiv = document.getElementById('sendFeedback');
+            feedbackDiv.className = `mailpro-message mailpro-message-${type}`;
+            feedbackDiv.textContent = text;
+            feedbackDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    feedbackDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        /**
+         * Load sending statistics for selected account
+         */
+        async function loadSendingStats() {
+            if (!currentSelectedAccount) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/sending-activity/${encodeURIComponent(currentSelectedAccount)}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const activity = data.recentActivity || [];
+
+                // Update summary
+                const successfulCount = activity.filter(a => a.status === 'success').length;
+                const failedCount = activity.filter(a => a.status === 'failed').length;
+
+                document.getElementById('totalSentCount').textContent = data.totalSent || 0;
+                document.getElementById('successfulCount').textContent = successfulCount;
+                document.getElementById('failedCount').textContent = failedCount;
+
+                if (activity.length > 0) {
+                    const lastSend = activity[0];
+                    document.getElementById('lastSendTime').textContent = formatDate(lastSend.timestamp);
+                }
+
+                // Populate recent sends
+                const recentBody = document.getElementById('recentSendsBody');
+                const successful = activity.filter(a => a.status === 'success');
+
+                if (successful.length === 0) {
+                    recentBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 1rem;">No successful sends yet</td></tr>';
+                } else {
+                    recentBody.innerHTML = successful.map(send => `
+                        <tr>
+                            <td class="mailpro-date">${formatDate(send.timestamp)}</td>
+                            <td>${send.recipientEmail}</td>
+                            <td>${send.subject}</td>
+                            <td style="text-align: center;">${send.totalRecipients || 1}</td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Populate failed sends
+                const failedBody = document.getElementById('failedSendsBody');
+                const failed = activity.filter(a => a.status === 'failed');
+
+                if (failed.length === 0) {
+                    failedBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 1rem;">No failed sends</td></tr>';
+                } else {
+                    failedBody.innerHTML = failed.map(send => `
+                        <tr>
+                            <td class="mailpro-date">${formatDate(send.timestamp)}</td>
+                            <td>${send.recipientEmail}</td>
+                            <td>${send.subject}</td>
+                            <td style="color: #ef4444;">${send.errorMessage || 'Unknown error'}</td>
+                        </tr>
+                    `).join('');
+                }
+
+            } catch (error) {
+                console.error('Error loading sending stats:', error);
+            }
+        }
+
+        /**
+         * Switch statistics tab
+         */
+        function switchStatsTab(tabName) {
+            // Hide all tabs
+            document.getElementById('recentSendsTab').style.display = 'none';
+            document.getElementById('failedSendsTab').style.display = 'none';
+            document.getElementById('summaryTab').style.display = 'none';
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.mailpro-tab-btn').forEach(btn => {
+                btn.classList.remove('mailpro-tab-active');
+            });
+
+            // Show selected tab
+            if (tabName === 'recent') {
+                document.getElementById('recentSendsTab').style.display = 'block';
+                document.querySelectorAll('.mailpro-tab-btn')[0].classList.add('mailpro-tab-active');
+            } else if (tabName === 'failed') {
+                document.getElementById('failedSendsTab').style.display = 'block';
+                document.querySelectorAll('.mailpro-tab-btn')[1].classList.add('mailpro-tab-active');
+            } else if (tabName === 'summary') {
+                document.getElementById('summaryTab').style.display = 'block';
+                document.querySelectorAll('.mailpro-tab-btn')[2].classList.add('mailpro-tab-active');
+            }
+        }
+
+        /**
+         * View lock history for an account
+         */
+        async function viewLockHistory(email) {
+            try {
+                const response = await fetch(`/admin/lock-history/${encodeURIComponent(email)}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                const lockStatus = data.currentLockStatus;
+                const history = data.unlockHistory || [];
+
+                let historyText = `Lock History for: ${email}\n`;
+                historyText += `==================\n`;
+
+                if (lockStatus.isLocked) {
+                    historyText += `Current Status: LOCKED\n`;
+                    historyText += `Reason: ${lockStatus.reason}\n`;
+                    historyText += `Locked by: ${lockStatus.actor}\n`;
+                    historyText += `Locked at: ${formatDate(lockStatus.timestamp)}\n`;
+                    if (lockStatus.expiry) {
+                        historyText += `Expires: ${formatDate(lockStatus.expiry)}\n`;
+                    }
+                } else {
+                    historyText += `Current Status: UNLOCKED\n`;
+                }
+
+                historyText += `\nUnlock History:\n`;
+                if (history.length === 0) {
+                    historyText += `- No unlock history\n`;
+                } else {
+                    history.forEach((entry, index) => {
+                        historyText += `\n${index + 1}. Unlocked at: ${formatDate(entry.unlockedAt)}\n`;
+                        historyText += `   By: ${entry.unlockedBy}\n`;
+                        historyText += `   Reason: ${entry.reason}\n`;
+                    });
+                }
+
+                alert(historyText);
+
+            } catch (error) {
+                console.error('Error loading lock history:', error);
+                showMessage('Failed to load lock history: ' + error.message, 'error');
             }
         }
 
