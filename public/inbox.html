@@ -36,8 +36,22 @@
     }
     </script>
     <link rel="stylesheet" href="style.css">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme-preference') ||
+                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body>
+    <header class="mailpro-navbar" role="banner">
+        <a href="/" class="mailpro-logo-link" title="MailPro Nafij - Home">
+            <img src="/mailpro-nafij.png" alt="Mailpro Nafij Logo" class="mailpro-logo-img" width="56" height="56">
+            <span class="mailpro-logo-text">MailPro Nafij</span>
+        </a>
+        <button id="themeToggle" class="mailpro-btn-theme-toggle" aria-label="Toggle dark/light theme" title="Toggle theme">🌙</button>
+    </header>
     <div class="container">
         <div class="mailpro-header" id="mailpro-inbox-header">
             <h1 class="mailpro-inbox-title" id="mailpro-inbox-page-title">MailPro Nafij Inbox</h1>

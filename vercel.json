@@ -1,0 +1,73 @@
+{
+  "version": 2,
+  "public": true,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "env": {
+    "NODE_ENV": "production",
+    "SESSION_KEYS": "@DEFINITION SESSION_KEYS",
+    "ADMIN_PASSWORD": "@DEFINITION ADMIN_PASSWORD",
+    "OAUTH_CALLBACK_URL": "@DEFINITION OAUTH_CALLBACK_URL",
+    "MONGODB_URI": "@DEFINITION MONGODB_URI",
+    "CANONICAL_URL": "https://mailpro.nafij.me",
+    "SUPPORT_EMAIL": "support@nafij.me",
+    "HOSTING_CREDIT": "hosting@nafijrahaman.me"
+  },
+  "functions": {
+    "server.js": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server.js"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/server.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/public/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/favicon/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}

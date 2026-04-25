@@ -16,8 +16,22 @@
     <meta name="canonical" content="https://mailpro.nafij.me/author">
     <title>About Nafij Rahaman - Full Stack Developer</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme-preference') ||
+                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body>
+    <header class="mailpro-navbar" role="banner">
+        <a href="/" class="mailpro-logo-link" title="MailPro Nafij - Home">
+            <img src="/mailpro-nafij.png" alt="Mailpro Nafij Logo" class="mailpro-logo-img" width="56" height="56">
+            <span class="mailpro-logo-text">MailPro Nafij</span>
+        </a>
+        <button id="themeToggle" class="mailpro-btn-theme-toggle" aria-label="Toggle dark/light theme" title="Toggle theme">🌙</button>
+    </header>
     <div class="container">
         <div class="header">
             <h1>👨‍💻 About Nafij Rahaman</h1>
@@ -138,5 +152,23 @@
             <a href="/terms">Terms</a>
         </p>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const next = current === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    localStorage.setItem('theme-preference', next);
+                    themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+                });
+
+                const currentTheme = localStorage.getItem('theme-preference') || 'dark';
+                themeToggle.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,18 +1,27 @@
 /* ============================================================================
-   DARK CLAYMORPHISM DESIGN SYSTEM v1.0
-   Tokenized design system with clay-style 3D effects, atmospheric dark theme
+   CLAYMORPHISM DESIGN SYSTEM v2.0
+   Tokenized design system with clay-style 3D effects, light & dark themes
    =========================================================================== */
 
 /* ============================================================================
-   COLOR TOKENS - DARK PALETTE
+   COLOR TOKENS - THEME SUPPORT (DARK DEFAULT)
    =========================================================================== */
 :root {
+    color-scheme: dark light;
+
     /* Primary dark palette - deep navy/charcoal base */
     --color-dark-bg: #0f1419;
     --color-dark-surface-1: #151b26;
     --color-dark-surface-2: #1a212e;
     --color-dark-surface-3: #202738;
     --color-dark-overlay: rgba(15, 20, 25, 0.8);
+
+    /* Light palette */
+    --color-light-bg: #ffffff;
+    --color-light-surface-1: #f8fafc;
+    --color-light-surface-2: #f1f5f9;
+    --color-light-surface-3: #e2e8f0;
+    --color-light-overlay: rgba(255, 255, 255, 0.8);
 
     /* Accent palette - cool, refined tones */
     --color-primary: #6366f1;
@@ -40,17 +49,24 @@
     --color-info-light: #60a5fa;
     --color-info-transparent: rgba(59, 130, 246, 0.12);
 
-    /* Text palette - high contrast on dark */
+    /* Text palette - high contrast on dark (default) */
     --color-text-primary: #f1f5f9;
     --color-text-secondary: #cbd5e1;
     --color-text-tertiary: #94a3b8;
     --color-text-muted: #64748b;
 
+    /* Dark mode backgrounds */
+    --color-bg: var(--color-dark-bg);
+    --color-surface-1: var(--color-dark-surface-1);
+    --color-surface-2: var(--color-dark-surface-2);
+    --color-surface-3: var(--color-dark-surface-3);
+    --color-overlay: var(--color-dark-overlay);
+
     /* ============================================================================
        ELEVATION TOKENS - CLAY SHADOW SYSTEM
        =========================================================================== */
 
-    /* Level 1: Subtle surface elevation */
+    /* Level 1: Subtle surface elevation - Dark shadows */
     --shadow-elevation-1: 0 4px 12px rgba(0, 0, 0, 0.25),
                           inset 1px 1px 0 rgba(255, 255, 255, 0.08);
 
@@ -71,7 +87,7 @@
                     inset 0 -2px 4px rgba(255, 255, 255, 0.05);
 
     /* Focus ring effect */
-    --shadow-focus: 0 0 0 3px var(--color-dark-surface-1),
+    --shadow-focus: 0 0 0 3px var(--color-surface-1),
                     0 0 0 6px var(--color-primary);
 
     /* ============================================================================
@@ -144,6 +160,50 @@
     --breakpoint-2xl: 1536px;
 }
 
+/* Light theme - when data-theme="light" or prefers-color-scheme: light */
+[data-theme="light"],
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        /* Light mode text colors */
+        --color-text-primary: #1e293b;
+        --color-text-secondary: #475569;
+        --color-text-tertiary: #64748b;
+        --color-text-muted: #94a3b8;
+
+        /* Light mode backgrounds */
+        --color-bg: var(--color-light-bg);
+        --color-surface-1: var(--color-light-surface-1);
+        --color-surface-2: var(--color-light-surface-2);
+        --color-surface-3: var(--color-light-surface-3);
+        --color-overlay: var(--color-light-overlay);
+
+        /* Light mode shadows */
+        --shadow-elevation-1: 0 4px 12px rgba(0, 0, 0, 0.08),
+                              inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        --shadow-elevation-2: 0 8px 24px rgba(0, 0, 0, 0.12),
+                              inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        --shadow-elevation-3: 0 16px 40px rgba(0, 0, 0, 0.15),
+                              inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        --shadow-elevation-4: 0 24px 56px rgba(0, 0, 0, 0.18),
+                              inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+        --shadow-press: inset 0 2px 8px rgba(0, 0, 0, 0.1),
+                        inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* Force dark theme */
+[data-theme="dark"] {
+    --color-text-primary: #f1f5f9;
+    --color-text-secondary: #cbd5e1;
+    --color-text-tertiary: #94a3b8;
+    --color-text-muted: #64748b;
+    --color-bg: var(--color-dark-bg);
+    --color-surface-1: var(--color-dark-surface-1);
+    --color-surface-2: var(--color-dark-surface-2);
+    --color-surface-3: var(--color-dark-surface-3);
+    --color-overlay: var(--color-dark-overlay);
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     :root {
@@ -173,7 +233,7 @@ html {
 
 body {
     font-family: var(--font-family-base);
-    background: linear-gradient(135deg, var(--color-dark-bg) 0%, var(--color-dark-surface-1) 100%);
+    background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-surface-1) 100%);
     min-height: 100vh;
     color: var(--color-text-primary);
     line-height: var(--line-height-normal);
@@ -181,6 +241,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     overflow-x: hidden;
+    transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Atmospheric animated background overlay */
@@ -198,7 +259,56 @@ body::before {
 }
 
 /* ============================================================================
-   CONTAINER & LAYOUT
+   THEME TOGGLE BUTTON
+   =========================================================================== */
+
+.mailpro-btn-theme-toggle {
+    background: var(--color-surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--color-text-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-elevation-1);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mailpro-btn-theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevation-2);
+    background: var(--color-surface-3);
+}
+
+.mailpro-btn-theme-toggle:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-press);
+}
+
+.mailpro-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-surface-2);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-elevation-2);
+    transition: all var(--transition-normal);
+}
+
+/* ============================================================================
+   NAVBAR & LOGO
    =========================================================================== */
 
 .container {
@@ -224,7 +334,7 @@ body::before {
    =========================================================================== */
 
 .header {
-    background: var(--color-dark-surface-2);
+    background: var(--color-surface-2);
     backdrop-filter: blur(16px);
     border-radius: var(--radius-xl);
     padding: var(--spacing-3xl) var(--spacing-xl);
