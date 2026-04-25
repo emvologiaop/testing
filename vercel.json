@@ -1,18 +1,8 @@
 {
   "version": 2,
   "public": true,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build || echo 'No build needed'",
   "outputDirectory": "public",
-  "env": {
-    "NODE_ENV": "production",
-    "SESSION_KEYS": "@DEFINITION SESSION_KEYS",
-    "ADMIN_PASSWORD": "@DEFINITION ADMIN_PASSWORD",
-    "OAUTH_CALLBACK_URL": "@DEFINITION OAUTH_CALLBACK_URL",
-    "MONGODB_URI": "@DEFINITION MONGODB_URI",
-    "CANONICAL_URL": "https://mailpro.nafij.me",
-    "SUPPORT_EMAIL": "support@nafij.me",
-    "HOSTING_CREDIT": "hosting@nafijrahaman.me"
-  },
   "functions": {
     "server.js": {
       "memory": 1024,
