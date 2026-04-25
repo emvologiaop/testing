@@ -204,35 +204,35 @@ function sanitizeHtml(html) {
  * GET / - Landing page
  */
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
 /**
  * GET /privacy - Privacy Policy page
  */
 app.get('/privacy', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+  res.sendFile(path.join(__dirname, 'static', 'privacy.html'));
 });
 
 /**
  * GET /terms - Terms of Service page
  */
 app.get('/terms', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+  res.sendFile(path.join(__dirname, 'static', 'terms.html'));
 });
 
 /**
  * GET /author - Author profile page
  */
 app.get('/author', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'author.html'));
+  res.sendFile(path.join(__dirname, 'static', 'author.html'));
 });
 
 /**
  * GET /credits - Credits and hosting thanks page
  */
 app.get('/credits', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'credits.html'));
+  res.sendFile(path.join(__dirname, 'static', 'credits.html'));
 });
 
 /**
@@ -740,7 +740,7 @@ app.get('/admin/accounts/search', checkAdmin, async (req, res) => {
  * GET /admin - Serve admin dashboard
  */
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  res.sendFile(path.join(__dirname, 'static', 'admin.html'));
 });
 
 /**
