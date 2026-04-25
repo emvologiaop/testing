@@ -12,19 +12,27 @@
     <meta property="og:url" content="https://mailpro.nafij.me/inbox.html">
     <meta property="og:title" content="MailPro Nafij Inbox - View & Manage Your Emails">
     <meta property="og:description" content="Access and manage multiple Gmail accounts through MailPro Nafij with secure OAuth2 authentication.">
+    <meta property="og:image" content="https://mailpro.nafij.me/mailpro-nafij.png">
+    <meta property="og:image:alt" content="Mailpro Nafij Logo - Gmail Inbox Viewer">
     <meta property="og:site_name" content="MailPro Nafij">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:url" content="https://mailpro.nafij.me/inbox.html">
     <meta name="twitter:title" content="MailPro Nafij Inbox">
     <meta name="twitter:description" content="View your Gmail emails securely with MailPro Nafij">
     <meta name="author" content="Nafij Rahaman">
+    <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
       "name": "MailPro Nafij Inbox",
       "url": "https://mailpro.nafij.me/inbox.html",
-      "description": "Secure Gmail inbox viewer for mail nafij and nafijrahaman accounts"
+      "description": "Secure Gmail inbox viewer for mail nafij and nafijrahaman accounts",
+      "image": "https://mailpro.nafij.me/mailpro-nafij.png"
     }
     </script>
     <link rel="stylesheet" href="style.css">
@@ -58,23 +66,52 @@
                     <h3>Compose Email in MailPro Nafij</h3>
                     <button id="closeComposeBtn" class="mailpro-btn-close" aria-label="Close compose panel">&times;</button>
                 </div>
+
+                <!-- HTML Mode Toggle -->
+                <div class="mailpro-compose-mode-controls">
+                    <label class="mailpro-mode-toggle">
+                        <input type="checkbox" id="htmlModeToggle" aria-label="Toggle HTML email mode">
+                        <span class="mailpro-toggle-label">HTML Email</span>
+                    </label>
+                </div>
+
                 <div class="mailpro-compose-form">
                     <div class="mailpro-form-group">
                         <label for="composeTo" class="mailpro-label">To:</label>
-                        <input type="email" id="composeTo" class="mailpro-form-control" placeholder="recipient@example.com" required aria-label="Email recipient">
+                        <input type="text" id="composeTo" class="mailpro-form-control" placeholder="recipient@example.com or email1@example.com, email2@example.com" required aria-label="Email recipient(s)">
+                        <div id="toValidationMsg" class="mailpro-validation-msg"></div>
                     </div>
                     <div class="mailpro-form-group">
                         <label for="composeCc" class="mailpro-label">Cc (optional):</label>
                         <input type="text" id="composeCc" class="mailpro-form-control" placeholder="email1@example.com, email2@example.com" aria-label="CC recipients">
+                        <div id="ccValidationMsg" class="mailpro-validation-msg"></div>
+                    </div>
+                    <div class="mailpro-form-group">
+                        <label for="composeBcc" class="mailpro-label">Bcc (optional):</label>
+                        <input type="text" id="composeBcc" class="mailpro-form-control" placeholder="email1@example.com, email2@example.com" aria-label="BCC recipients">
+                        <div id="bccValidationMsg" class="mailpro-validation-msg"></div>
                     </div>
                     <div class="mailpro-form-group">
                         <label for="composeSubject" class="mailpro-label">Subject:</label>
                         <input type="text" id="composeSubject" class="mailpro-form-control" placeholder="Email subject" required aria-label="Email subject">
                     </div>
-                    <div class="mailpro-form-group">
-                        <label for="composeBody" class="mailpro-label">Message:</label>
+
+                    <!-- HTML/Text Body Section with Preview Toggle -->
+                    <div class="mailpro-body-section">
+                        <div class="mailpro-body-controls">
+                            <label for="composeBody" class="mailpro-label">Message:</label>
+                            <button type="button" id="togglePreviewBtn" class="mailpro-btn mailpro-btn-small mailpro-btn-secondary" style="display: none;" aria-label="Toggle HTML preview">Preview</button>
+                        </div>
                         <textarea id="composeBody" class="mailpro-form-control mailpro-compose-textarea" placeholder="Write your message here..." required aria-label="Email message body"></textarea>
+                        <div id="htmlPreviewContainer" class="mailpro-html-preview-container" style="display: none;">
+                            <div class="mailpro-preview-header">
+                                <span class="mailpro-preview-title">Live Preview</span>
+                                <button type="button" id="closePreviewBtn" class="mailpro-btn-close-small" aria-label="Close preview">&times;</button>
+                            </div>
+                            <iframe id="htmlPreviewFrame" class="mailpro-html-preview-frame" sandbox="allow-same-origin" title="HTML email preview"></iframe>
+                        </div>
                     </div>
+
                     <div class="mailpro-compose-actions">
                         <button id="sendBtn" class="mailpro-btn mailpro-btn-success" aria-label="Send email">Send Email</button>
                         <button id="cancelBtn" class="mailpro-btn mailpro-btn-secondary" aria-label="Cancel compose">Cancel</button>
@@ -372,8 +409,13 @@
             document.getElementById('composePanel').style.display = 'none';
             document.getElementById('composeTo').value = '';
             document.getElementById('composeCc').value = '';
+            document.getElementById('composeBcc').value = '';
             document.getElementById('composeSubject').value = '';
             document.getElementById('composeBody').value = '';
+            document.getElementById('htmlModeToggle').checked = false;
+            document.getElementById('htmlPreviewContainer').style.display = 'none';
+            clearValidationMessages();
+            updateComposeMode();
         }
 
         /**
@@ -381,29 +423,182 @@
          */
         function isValidEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
+            return emailRegex.test(email.trim());
         }
 
         /**
-         * Send email
+         * Parse and validate comma-separated email addresses
+         */
+        function parseEmails(emailString) {
+            if (!emailString || !emailString.trim()) {
+                return { valid: [], invalid: [] };
+            }
+
+            const emails = emailString.split(',').map(e => e.trim()).filter(e => e);
+            const valid = emails.filter(isValidEmail);
+            const invalid = emails.filter(e => !isValidEmail(e));
+
+            return { valid, invalid };
+        }
+
+        /**
+         * Validate recipient fields and show feedback
+         */
+        function validateRecipients() {
+            const toInput = document.getElementById('composeTo').value;
+            const ccInput = document.getElementById('composeCc').value;
+            const bccInput = document.getElementById('composeBcc').value;
+
+            const toResult = parseEmails(toInput);
+            const ccResult = parseEmails(ccInput);
+            const bccResult = parseEmails(bccInput);
+
+            // Show validation messages
+            showValidationMsg('toValidationMsg', toResult);
+            showValidationMsg('ccValidationMsg', ccResult);
+            showValidationMsg('bccValidationMsg', bccResult);
+
+            return {
+                toValid: toResult.valid.length > 0,
+                ccValid: ccResult.invalid.length === 0,
+                bccValid: bccResult.invalid.length === 0,
+                to: toResult.valid,
+                cc: ccResult.valid,
+                bcc: bccResult.valid
+            };
+        }
+
+        /**
+         * Display validation feedback for email fields
+         */
+        function showValidationMsg(elementId, result) {
+            const msgEl = document.getElementById(elementId);
+            if (!msgEl) return;
+
+            if (result.invalid.length > 0) {
+                msgEl.textContent = `Invalid email(s): ${result.invalid.join(', ')}`;
+                msgEl.className = 'mailpro-validation-msg mailpro-validation-error';
+                msgEl.style.display = 'block';
+            } else if (result.valid.length > 0) {
+                msgEl.textContent = `${result.valid.length} recipient(s)`;
+                msgEl.className = 'mailpro-validation-msg mailpro-validation-success';
+                msgEl.style.display = 'block';
+            } else {
+                msgEl.style.display = 'none';
+            }
+        }
+
+        /**
+         * Update HTML preview in real-time
+         */
+        let previewUpdateTimeout;
+        function updateHtmlPreview() {
+            if (!document.getElementById('htmlModeToggle').checked) return;
+
+            clearTimeout(previewUpdateTimeout);
+            previewUpdateTimeout = setTimeout(() => {
+                const htmlContent = document.getElementById('composeBody').value;
+                const previewFrame = document.getElementById('htmlPreviewFrame');
+
+                if (previewFrame && htmlContent.trim()) {
+                    const wrappedHtml = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <style>
+                                body {
+                                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+                                    margin: 20px;
+                                    color: #333;
+                                    line-height: 1.5;
+                                }
+                                img { max-width: 100%; height: auto; }
+                                a { color: #0066cc; text-decoration: none; }
+                                a:hover { text-decoration: underline; }
+                                table { border-collapse: collapse; width: 100%; }
+                                td, th { border: 1px solid #ddd; padding: 8px; }
+                            </style>
+                        </head>
+                        <body>${sanitizeHtmlContent(htmlContent)}</body>
+                        </html>
+                    `;
+                    previewFrame.srcdoc = wrappedHtml;
+                }
+            }, 300); // Debounce preview updates
+        }
+
+        /**
+         * Basic HTML sanitization for preview (client-side)
+         */
+        function sanitizeHtmlContent(html) {
+            const temp = document.createElement('div');
+            temp.textContent = html;
+            const sanitized = temp.innerHTML;
+
+            // Allow basic safe tags
+            return sanitized
+                .replace(/&lt;b&gt;/g, '<b>')
+                .replace(/&lt;\/b&gt;/g, '</b>')
+                .replace(/&lt;i&gt;/g, '<i>')
+                .replace(/&lt;\/i&gt;/g, '</i>')
+                .replace(/&lt;u&gt;/g, '<u>')
+                .replace(/&lt;\/u&gt;/g, '</u>')
+                .replace(/&lt;p&gt;/g, '<p>')
+                .replace(/&lt;\/p&gt;/g, '</p>')
+                .replace(/&lt;br&gt;/g, '<br>')
+                .replace(/&lt;hr&gt;/g, '<hr>')
+                .replace(/&lt;h[1-6]&gt;/g, (m) => m.replace(/&lt;/g, '<').replace(/&gt;/g, '>'))
+                .replace(/&lt;\/h[1-6]&gt;/g, (m) => m.replace(/&lt;/g, '<').replace(/&gt;/g, '>'))
+                .replace(/&lt;ul&gt;/g, '<ul>')
+                .replace(/&lt;\/ul&gt;/g, '</ul>')
+                .replace(/&lt;ol&gt;/g, '<ol>')
+                .replace(/&lt;\/ol&gt;/g, '</ol>')
+                .replace(/&lt;li&gt;/g, '<li>')
+                .replace(/&lt;\/li&gt;/g, '</li>')
+                .replace(/&lt;img\s+src="([^"]+)"\s*\/?&gt;/g, '<img src="$1" alt="image" style="max-width: 100%;">')
+                .replace(/&lt;a\s+href="([^"]+)"&gt;/g, '<a href="$1">')
+                .replace(/&lt;\/a&gt;/g, '</a>')
+                .replace(/&lt;table&gt;/g, '<table>')
+                .replace(/&lt;\/table&gt;/g, '</table>')
+                .replace(/&lt;tr&gt;/g, '<tr>')
+                .replace(/&lt;\/tr&gt;/g, '</tr>')
+                .replace(/&lt;td&gt;/g, '<td>')
+                .replace(/&lt;\/td&gt;/g, '</td>')
+                .replace(/&lt;th&gt;/g, '<th>')
+                .replace(/&lt;\/th&gt;/g, '</th>');
+        }
+
+        /**
+         * Send email with support for multiple recipients and HTML content
          */
         async function sendEmail() {
-            const to = document.getElementById('composeTo').value.trim();
-            const cc = document.getElementById('composeCc').value.trim();
             const subject = document.getElementById('composeSubject').value.trim();
             const body = document.getElementById('composeBody').value.trim();
+            const isHtmlMode = document.getElementById('htmlModeToggle').checked;
             const sendStatusDiv = document.getElementById('sendStatus');
 
-            // Validation
-            if (!to || !subject || !body) {
+            // Validate recipients
+            const recipientValidation = validateRecipients();
+
+            // Validation checks
+            if (!subject || !body) {
                 sendStatusDiv.textContent = 'Please fill in all required fields';
                 sendStatusDiv.className = 'mailpro-status-message mailpro-status-error';
                 sendStatusDiv.style.display = 'block';
                 return;
             }
 
-            if (!isValidEmail(to)) {
-                sendStatusDiv.textContent = 'Invalid recipient email address';
+            if (!recipientValidation.toValid) {
+                sendStatusDiv.textContent = 'Please provide at least one valid To address';
+                sendStatusDiv.className = 'mailpro-status-message mailpro-status-error';
+                sendStatusDiv.style.display = 'block';
+                return;
+            }
+
+            if (!recipientValidation.ccValid || !recipientValidation.bccValid) {
+                sendStatusDiv.textContent = 'Please fix invalid email addresses in Cc or Bcc fields';
                 sendStatusDiv.className = 'mailpro-status-message mailpro-status-error';
                 sendStatusDiv.style.display = 'block';
                 return;
@@ -425,17 +620,20 @@
                     },
                     body: JSON.stringify({
                         email: currentAccount,
-                        to: to,
-                        cc: cc || undefined,
+                        to: recipientValidation.to,
+                        cc: recipientValidation.cc.length > 0 ? recipientValidation.cc : undefined,
+                        bcc: recipientValidation.bcc.length > 0 ? recipientValidation.bcc : undefined,
                         subject: subject,
-                        body: body
+                        body: body,
+                        isHtml: isHtmlMode
                     })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    sendStatusDiv.textContent = `Email sent successfully to ${result.recipient}!`;
+                    const recipientCount = recipientValidation.to.length + (recipientValidation.cc.length || 0);
+                    sendStatusDiv.textContent = `Email sent successfully to ${recipientCount} recipient(s)!`;
                     sendStatusDiv.className = 'mailpro-status-message mailpro-status-success';
                     sendStatusDiv.style.display = 'block';
 
@@ -544,16 +742,85 @@
         document.getElementById('sendBtn').addEventListener('click', sendEmail);
         document.getElementById('backBtn').addEventListener('click', goBack);
 
-        // Allow sending with Ctrl+Enter in compose textarea
-        document.getElementById('composeBody').addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                sendEmail();
+        // HTML Mode Toggle Handler
+        document.getElementById('htmlModeToggle').addEventListener('change', updateComposeMode);
+
+        /**
+         * Update compose UI based on HTML mode
+         */
+        function updateComposeMode() {
+            const isHtmlMode = document.getElementById('htmlModeToggle').checked;
+            const previewBtn = document.getElementById('togglePreviewBtn');
+            const bodyTextarea = document.getElementById('composeBody');
+
+            if (isHtmlMode) {
+                previewBtn.style.display = 'inline-block';
+                bodyTextarea.placeholder = 'Write HTML content here... (e.g., <p>Hello</p>)';
+                bodyTextarea.classList.add('mailpro-compose-html-mode');
+            } else {
+                previewBtn.style.display = 'none';
+                document.getElementById('htmlPreviewContainer').style.display = 'none';
+                bodyTextarea.placeholder = 'Write your message here...';
+                bodyTextarea.classList.remove('mailpro-compose-html-mode');
+            }
+        }
+
+        // Preview Toggle Handler
+        document.getElementById('togglePreviewBtn').addEventListener('click', function() {
+            const previewContainer = document.getElementById('htmlPreviewContainer');
+            if (previewContainer.style.display === 'none') {
+                previewContainer.style.display = 'block';
+                updateHtmlPreview();
+            } else {
+                previewContainer.style.display = 'none';
             }
         });
+
+        // Close Preview Handler
+        document.getElementById('closePreviewBtn').addEventListener('click', function() {
+            document.getElementById('htmlPreviewContainer').style.display = 'none';
+        });
+
+        // Real-time preview update
+        document.getElementById('composeBody').addEventListener('input', updateHtmlPreview);
+
+        // Real-time recipient validation
+        document.getElementById('composeTo').addEventListener('input', () => {
+            const result = parseEmails(document.getElementById('composeTo').value);
+            showValidationMsg('toValidationMsg', result);
+        });
+
+        document.getElementById('composeCc').addEventListener('input', () => {
+            const result = parseEmails(document.getElementById('composeCc').value);
+            showValidationMsg('ccValidationMsg', result);
+        });
+
+        document.getElementById('composeBcc').addEventListener('input', () => {
+            const result = parseEmails(document.getElementById('composeBcc').value);
+            showValidationMsg('bccValidationMsg', result);
+        });
+
+        /**
+         * Clear all validation messages
+         */
+        function clearValidationMessages() {
+            ['toValidationMsg', 'ccValidationMsg', 'bccValidationMsg'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadAccounts();
+            updateComposeMode();
+
+            // Allow sending with Ctrl+Enter in compose textarea
+            document.getElementById('composeBody').addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    sendEmail();
+                }
+            });
 
             // Check if email parameter is provided in URL
             const urlParams = new URLSearchParams(window.location.search);

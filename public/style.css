@@ -1727,22 +1727,243 @@ input {
     color: var(--color-info-light);
 }
 
-/* Responsive adjustments for compose panel */
+/* ============================================================================
+   COMPOSE MODE CONTROLS - HTML TOGGLE SWITCH
+   =========================================================================== */
+
+.mailpro-compose-mode-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    align-items: center;
+}
+
+.mailpro-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mailpro-mode-toggle input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 3rem;
+    height: 1.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-full);
+    background: var(--color-dark-surface-1);
+    cursor: pointer;
+    position: relative;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.mailpro-mode-toggle input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: var(--radius-full);
+    background: white;
+    top: 0.15rem;
+    left: 0.15rem;
+    transition: left var(--transition-fast);
+}
+
+.mailpro-mode-toggle input[type="checkbox"]:checked {
+    background: var(--color-primary);
+    border-color: var(--color-primary-light);
+}
+
+.mailpro-mode-toggle input[type="checkbox"]:checked::before {
+    left: 1.5rem;
+}
+
+.mailpro-mode-toggle input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.mailpro-toggle-label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* ============================================================================
+   VALIDATION MESSAGE STYLES
+   =========================================================================== */
+
+.mailpro-validation-msg {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    margin-top: var(--spacing-xs);
+    display: none;
+    animation: slideInDown 200ms ease-out;
+}
+
+.mailpro-validation-success {
+    color: var(--color-success-light);
+    background: var(--color-success-transparent);
+    border: 1px solid var(--color-success);
+}
+
+.mailpro-validation-error {
+    color: var(--color-danger-light);
+    background: var(--color-danger-transparent);
+    border: 1px solid var(--color-danger);
+}
+
+/* ============================================================================
+   HTML COMPOSE MODE & BODY SECTION
+   =========================================================================== */
+
+.mailpro-body-section {
+    position: relative;
+}
+
+.mailpro-body-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.mailpro-compose-html-mode {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+}
+
+/* ============================================================================
+   HTML PREVIEW PANEL - LIVE RENDERING
+   =========================================================================== */
+
+.mailpro-html-preview-container {
+    background: var(--color-dark-surface-1);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-lg);
+    margin-top: var(--spacing-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-elevation-1);
+    animation: slideInUp var(--transition-normal) var(--easing-out);
+}
+
+.mailpro-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: rgba(99, 102, 241, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mailpro-preview-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mailpro-btn-close-small {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.mailpro-btn-close-small:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--color-text-secondary);
+}
+
+.mailpro-btn-close-small:active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.mailpro-html-preview-frame {
+    width: 100%;
+    height: 400px;
+    border: none;
+    background: white;
+    display: block;
+}
+
+/* Responsive preview height */
 @media (max-width: 768px) {
-    .mailpro-compose-panel {
-        padding: var(--spacing-md);
+    .mailpro-html-preview-frame {
+        height: 300px;
     }
 
-    .mailpro-compose-textarea {
-        min-height: 120px;
+    .mailpro-html-preview-container {
+        margin-top: var(--spacing-md);
+    }
+}
+
+@media (max-width: 640px) {
+    .mailpro-html-preview-frame {
+        height: 250px;
     }
 
-    .mailpro-compose-actions {
-        flex-direction: column;
+    .mailpro-preview-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+}
+
+/* ============================================================================
+   BUTTON VARIANTS - SMALL SIZE
+   =========================================================================== */
+
+.mailpro-btn-small {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.mailpro-btn-small:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.mailpro-btn-small:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* ============================================================================
+   RESPONSIVE COMPOSE PANEL ENHANCEMENTS
+   =========================================================================== */
+
+@media (max-width: 768px) {
+    .mailpro-compose-mode-controls {
+        flex-wrap: wrap;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .mailpro-body-controls {
+        flex-wrap: wrap;
         gap: var(--spacing-sm);
     }
 
-    .mailpro-btn-success {
-        width: 100%;
+    .mailpro-body-controls .mailpro-label {
+        flex: 1 0 100%;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .mailpro-body-controls button {
+        flex: 1 0 auto;
     }
 }

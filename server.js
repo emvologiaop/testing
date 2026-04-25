@@ -760,12 +760,13 @@ app.post('/admin/login', (req, res) => {
 
 /**
  * POST /send - Send email via Gmail API
- * Requires: email (sender), to (recipient), subject, body
- * Features: validation, rate-limiting, activity tracking
+ * Requires: email (sender), to (recipient or array), subject, body
+ * Optional: cc, bcc (comma-separated or arrays), isHtml (boolean)
+ * Features: validation, rate-limiting, activity tracking, HTML support, multiple recipients
  */
 app.post('/send', async (req, res) => {
   try {
-    const { email, to, subject, body, cc, bcc } = req.body;
+    const { email, to, subject, body, cc, bcc, isHtml } = req.body;
     const userEmail = req.session.userEmail;
 
     // Validation
@@ -777,9 +778,41 @@ app.post('/send', async (req, res) => {
 
     // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email) || !emailRegex.test(to)) {
+    if (!emailRegex.test(email)) {
       return res.status(400).json({
-        error: 'Invalid email address format'
+        error: 'Invalid sender email address format'
+      });
+    }
+
+    // Parse recipients (handle both array and string formats)
+    const parseRecipients = (recipients) => {
+      if (Array.isArray(recipients)) {
+        return recipients.filter(r => emailRegex.test(r.trim())).map(r => r.trim());
+      }
+      if (typeof recipients === 'string') {
+        return recipients
+          .split(',')
+          .map(r => r.trim())
+          .filter(r => r && emailRegex.test(r));
+      }
+      return [];
+    };
+
+    const recipientsTo = parseRecipients(to);
+    const recipientsCc = parseRecipients(cc);
+    const recipientsBcc = parseRecipients(bcc);
+
+    if (recipientsTo.length === 0) {
+      return res.status(400).json({
+        error: 'At least one valid recipient is required in the To field'
+      });
+    }
+
+    // Validate Cc and Bcc have valid emails if provided
+    const allCcBcc = [...recipientsCc, ...recipientsBcc];
+    if ((cc || bcc) && allCcBcc.length === 0) {
+      return res.status(400).json({
+        error: 'Cc or Bcc fields contain invalid email addresses'
       });
     }
 
@@ -829,23 +862,37 @@ app.post('/send', async (req, res) => {
     // Initialize Gmail API
     const gmail = google.gmail({ version: 'v1', auth: accountOAuth });
 
-    // Construct email message
-    const recipients = [to];
-    if (cc) recipients.push(...cc.split(',').map(e => e.trim()));
+    // Sanitize HTML if provided
+    const sanitizedBody = isHtml ? sanitizeHtml(body) : body;
+
+    // Construct email message with proper MIME format
+    const headers = [
+      `From: ${email}`,
+      `To: ${recipientsTo.join(', ')}`,
+      ...(recipientsCc.length > 0 ? [`Cc: ${recipientsCc.join(', ')}`] : []),
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: ${isHtml ? 'text/html' : 'text/plain'}; charset="UTF-8"`,
+    ];
+
+    // If HTML, ensure proper encoding
+    if (isHtml) {
+      headers.push(`Content-Transfer-Encoding: quoted-printable`);
+    }
 
     const emailMessage = [
-      `From: ${email}`,
-      `To: ${to}`,
-      cc ? `Cc: ${cc}` : '',
-      `Subject: ${subject}`,
-      'Content-Type: text/plain; charset="UTF-8"',
-      'MIME-Version: 1.0',
+      ...headers,
       '',
-      body
-    ].filter(Boolean).join('\n');
+      isHtml ? sanitizedBody : sanitizedBody
+    ].join('\r\n');
+
+    // Add Bcc recipients to headers for Gmail API (not in actual message headers)
+    const messageBody = isHtml && isHtml.length > 0
+      ? emailMessage
+      : emailMessage;
 
     // Encode to base64 for Gmail API
-    const encodedMessage = Buffer.from(emailMessage).toString('base64')
+    const encodedMessage = Buffer.from(messageBody).toString('base64')
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
@@ -858,16 +905,20 @@ app.post('/send', async (req, res) => {
       }
     });
 
-    // Extract recipient name from email if available
-    const recipientName = to.split('@')[0];
-
     // Record sending activity in database
     account.lastSentEmail = new Date();
+    const recipientName = recipientsTo[0].split('@')[0];
+    const totalRecipients = recipientsTo.length + recipientsCc.length + recipientsBcc.length;
+
     account.sendingActivity.push({
       timestamp: new Date(),
-      recipientEmail: to,
+      recipientEmail: recipientsTo.join(', '),
+      ccEmail: recipientsCc.length > 0 ? recipientsCc.join(', ') : null,
+      bccEmail: recipientsBcc.length > 0 ? recipientsBcc.join(', ') : null,
       recipientName: recipientName,
       subject: subject,
+      totalRecipients: totalRecipients,
+      isHtml: isHtml || false,
       status: 'success'
     });
 
@@ -878,13 +929,13 @@ app.post('/send', async (req, res) => {
 
     await account.save();
 
-    console.log(`📧 Email sent from ${email} to ${to}: "${subject}"`);
+    console.log(`📧 Email sent from ${email} to ${recipientsTo.length} recipient(s) (Cc: ${recipientsCc.length}, Bcc: ${recipientsBcc.length}): "${subject}"`);
 
     res.json({
       success: true,
       message: 'Email sent successfully',
       messageId: sendRes.data.id,
-      recipient: to,
+      recipients: totalRecipients,
       subject: subject
     });
 
@@ -897,10 +948,10 @@ app.post('/send', async (req, res) => {
       if (email) {
         const account = await Account.findOne({ email: email.toLowerCase() });
         if (account) {
-          const recipientName = req.body.to ? req.body.to.split('@')[0] : 'unknown';
+          const recipientName = req.body.to ? (Array.isArray(req.body.to) ? req.body.to[0] : req.body.to).split('@')[0] : 'unknown';
           account.sendingActivity.push({
             timestamp: new Date(),
-            recipientEmail: req.body.to || 'unknown',
+            recipientEmail: Array.isArray(req.body.to) ? req.body.to.join(', ') : req.body.to || 'unknown',
             recipientName: recipientName,
             subject: req.body.subject || 'unknown',
             status: 'failed',
