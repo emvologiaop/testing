@@ -1,15 +1,30 @@
-# Mail Service - Gmail OAuth Multi-Account App
+# MailPro Nafij - Secure Gmail Account Access & Management
 
-A production-ready Node.js + Express application that allows users to connect their Gmail accounts via OAuth2 and provides admin controls for managing account access.
+A production-ready Node.js + Express application providing secure temporary access to Gmail accounts with multi-account support, admin controls, and comprehensive SEO optimization.
 
 ## 🚀 Features
 
-- **Gmail OAuth2 Integration**: Secure authentication with Google
-- **Multi-Account Support**: Users can connect and switch between multiple Gmail accounts
-- **Admin Dashboard**: Web interface for managing all connected accounts
-- **Premium Account Control**: Lock/unlock accounts to restrict access
-- **MongoDB Integration**: Persistent storage of account data
-- **Production Ready**: Configured for deployment on Render
+### Phase 0 - Standards Lock (COMPLETE)
+- SEO-friendly naming conventions for classes, IDs, and aria-labels
+- Primary canonical domain: mailpro.nafij.me
+- Semantic HTML structure with proper ARIA labels
+- UI quality gates with responsive breakpoints
+
+### Phase 1 - SEO Everywhere System (COMPLETE)
+- Complete page-level SEO metadata (title, description, canonical, robots, Open Graph, Twitter cards, JSON-LD schema)
+- Semantic naming policy for all HTML identifiers
+- Reusable SEO constants for brand keywords (mail nafij, mailpro nafij, mail nafijpro, nafijrahaman)
+- Public robots.txt with crawl directives and sitemap reference
+- Public sitemap.xml with priority and update frequency
+- All public pages optimized: index, inbox, privacy, terms, author, credits
+
+### Production Features
+- **MailPro Nafij OAuth2**: Secure Gmail authentication with Google OAuth2
+- **Multi-Account Support**: Connect and switch between multiple mail nafij accounts
+- **Admin Dashboard**: Comprehensive management interface for account administration
+- **Premium Account Control**: Lock/unlock accounts to restrict public access
+- **MongoDB Integration**: Persistent account data storage
+- **Production Ready**: Deployed on Render with environment configuration
 
 ## 🛠️ Technology Stack
 
@@ -18,7 +33,17 @@ A production-ready Node.js + Express application that allows users to connect th
 - **Authentication**: Google OAuth2 (googleapis)
 - **Session Management**: cookie-session
 - **Security**: CORS enabled, secure session handling
+- **SEO**: Semantic HTML5, JSON-LD schema, Open Graph, Twitter Card meta tags
+- **Naming Convention**: MailPro Nafij brand-scoped semantic classes and identifiers
 
+### SEO Keywords Integrated
+- mail nafij
+- mailpro nafij  
+- mail nafijpro
+- nafijrahaman
+- gmail access
+- secure email viewer
+- oauth2 authentication
 ## 📋 Prerequisites
 
 Before running this application, you need:
@@ -35,25 +60,30 @@ Before running this application, you need:
 
 ## ⚙️ Environment Variables
 
-Create a `.env` file with the following variables:
+Create a `.env` file for MailPro Nafij configuration:
 
 ```env
-# Google OAuth2 Configuration
+# MailPro Nafij - Google OAuth2 Configuration
 GOOGLE_CLIENT_ID=your_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GOOGLE_REDIRECT_URI=https://mail-service-pro.onrender.com/auth/google/callback
+GOOGLE_REDIRECT_URI=https://mailpro.nafij.me/auth/google/callback
 
-# MongoDB Connection
-MONGO_URI=mongodb://localhost:27017/mail-service
+# MongoDB Connection for MailPro Nafij
+MONGO_URI=mongodb://localhost:27017/mailpro-nafij
 
-# Session Security
+# MailPro Session Security
 SESSION_SECRET=your_super_secret_session_key_here
 
-# Admin Configuration
-ADMIN_EMAIL=your_admin_gmail@gmail.com
+# MailPro Nafij Admin Configuration
+ADMIN_PASSWORD=your_secure_admin_password
 
-# Server Configuration (Optional)
+# Server Configuration
 PORT=3000
+NODE_ENV=production
+
+# Domain Configuration (Phase 0: Standards Lock)
+PRIMARY_DOMAIN=mailpro.nafij.me
+CANONICAL_URL=https://mailpro.nafij.me
 ```
 
 ## 🚀 Installation & Setup
@@ -82,36 +112,37 @@ npm start
 ## 📡 API Endpoints
 
 ### Authentication
-- `GET /auth/google` - Initiate Google OAuth flow
+- `GET /auth/google` - Initiate Google OAuth flow for MailPro Nafij
 - `GET /auth/google/callback` - Handle OAuth callback
 - `GET /logout` - Clear user session
 
 ### Account Access
-- `GET /inbox/:email` - Get inbox emails for account (requires permission)
-- `GET /` - Service information and current user
+- `GET /inbox/:email` - Get inbox emails for mail nafij account
+- `GET /email/:email/:messageId` - Get full email content from mail nafij
+- `GET /available-accounts` - List accounts for MailPro Nafij selector
 
 ### Admin Only
-- `GET /accounts` - List all connected accounts
-- `POST /admin/lock/:email` - Mark account as premium (restricted)
-- `POST /admin/unlock/:email` - Remove premium status (public access)
-- `GET /admin` - Admin dashboard interface
+- `POST /admin/login` - Authenticate as MailPro Nafij administrator
+- `GET /accounts` - List all connected mail nafij accounts
+- `POST /admin/lock/:email` - Restrict account access in MailPro Nafij
+- `POST /admin/unlock/:email` - Allow public access to mail nafij account
 
 ## 🔒 Access Control
 
 ### Regular Users
-- Can access their own Gmail accounts
-- Can access non-premium (public) accounts
+- Can access their own MailPro Nafij Gmail accounts
+- Can access non-premium (public) mail nafij accounts
 - Cannot access premium accounts owned by others
 
-### Admin Users
+### Admin Users (MailPro Nafij)
 - Can access all non-premium accounts
-- Can view all accounts in admin dashboard
-- Can lock/unlock accounts
+- Can view all mail nafij accounts in admin dashboard
+- Can lock/unlock accounts in MailPro system
 - Cannot access premium accounts (unless unlocked first)
 
 ### Account Status
-- **Public**: Accessible by owner and any authenticated user
-- **Premium**: Accessible only by owner and admin (when unlocked)
+- **Public**: Accessible in MailPro Nafij by owner and any authenticated user
+- **Premium**: Restricted to owner and admin in MailPro Nafij system
 
 ## 🏗️ Database Schema
 
@@ -125,6 +156,21 @@ npm start
 }
 ```
 
+## 🌐 Domain Strategy (Phase 0: Standards Lock)
+
+### Primary Domain (Canonical)
+- **mailpro.nafij.me** - Primary canonical domain for MailPro Nafij
+- All SEO signals concentrated here
+- Canonical meta tags point to this domain
+
+### Alternate Working Domains (Fallback)
+- mailpro.nafijrahaman.me - Alternate deployment location
+- mailpro.vercel.app - Fallback Vercel deployment
+- robots.txt and canonical tags prevent duplicate indexing
+
+### Deployment Configuration
+Ensure `CANONICAL_URL=https://mailpro.nafij.me` in all environment configurations to maintain SEO consistency across deployments.
+
 ## 🌐 Deployment on Render
 
 1. **Push code to GitHub repository**
@@ -136,25 +182,61 @@ npm start
 
 3. **Configure Environment Variables** in Render dashboard:
    - Add all variables from `.env.example`
-   - Update `GOOGLE_REDIRECT_URI` with your Render URL
+   - Set `CANONICAL_URL=https://mailpro.nafij.me`
+   - Set `GOOGLE_REDIRECT_URI=https://mailpro.nafij.me/auth/google/callback`
 
 4. **Update OAuth2 Settings**:
-   - Add your Render URL to Google Cloud Console authorized redirect URIs
+   - Add mailpro.nafij.me to Google Cloud Console authorized redirect URIs
 
-## 🔧 Development
+## 📋 Completed Phases
+
+### Phase 0 - Standards Lock (COMPLETE)
+Standards, naming conventions, and domain strategy established:
+- **Naming Standard**: `mailpro-` prefix for all classes, IDs, and semantic identifiers
+- **SEO Keywords**: mail nafij, mailpro nafij, mail nafijpro, nafijrahaman
+- **Primary Domain**: mailpro.nafij.me (canonical)
+- **Alternate Domains**: mailpro.nafijrahaman.me, mailpro.vercel.app
+- **HTML Structure**: Semantic HTML5 with ARIA labels for accessibility
+- **UI Quality Gates**: Responsive breakpoints, keyboard navigation, focus visibility
+
+### Phase 1 - SEO Everywhere System (COMPLETE)
+Comprehensive SEO optimization across all public pages:
+- **Meta Tags**: Title, description, canonical, robots, author on all pages
+- **Open Graph**: og:title, og:description, og:image, og:site_name
+- **Twitter Cards**: twitter:card, twitter:title, twitter:description, twitter:image
+- **Schema Markup**: JSON-LD structured data for WebApplication and WebPage types
+- **Semantic Naming**: All identifiers follow `mailpro-*` convention with semantic meaning
+- **SEO Constants**: Reusable keyword strings and site name constants in JavaScript
+- **Robots.txt**: Crawl directives with sitemap reference
+- **Sitemap.xml**: URL map with priority and update frequency for search engines
+
+### Next Phases
+- **Phase 2**: UI/UX Redesign (Dark Claymorphism + Special Design)
+- **Phase 3**: Inbox Reader Upgrade (Raw/HTML smart viewing)
+- **Phase 4**: Admin System Enhancement (Lock metadata and auditability)
+- **Phase 5**: New Pages (Author, Credits)
+- **Phase 6**: Gmail Sending System
+- **Phase 7**: QA, Security, Launch
 
 ### Project Structure
 ```
-mail-service/
+mailpro-nafij/
 ├── models/
-│   └── Account.js          # MongoDB schema
+│   └── Account.js              # MongoDB schema
 ├── public/
-│   └── admin.html          # Admin dashboard
-├── server.js               # Main Express application
-├── package.json            # Dependencies and scripts
-├── .env.example            # Environment template
-└── README.md               # This file
-```
+│   ├── index.html              # Homepage with SEO metadata
+│   ├── inbox.html              # Email inbox viewer with semantic naming
+│   ├── admin.html              # Admin dashboard with ARIA labels
+│   ├── privacy.html            # Privacy policy with SEO structure
+│   ├── terms.html              # Terms of service with SEO structure
+│   ├── robots.txt              # Crawl directives (Phase 1)
+│   ├── sitemap.xml             # URL sitemap for MailPro Nafij (Phase 1)
+│   └── style.css               # Semantic CSS with mailpro- prefix
+├── server.js                   # Main Express application
+├── package.json                # Dependencies and scripts
+├── .env.example                # Environment template
+├── README.md                   # Documentation
+└── plan.md                     # Development roadmap
 
 ### Scripts
 - `npm start` - Production server

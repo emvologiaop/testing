@@ -3,70 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mail Service - Admin Dashboard</title>
+    <title>MailPro Nafij Admin Dashboard - Account Management</title>
+    <meta name="description" content="MailPro Nafij Admin Dashboard: Manage and monitor all connected Gmail accounts, control account access, and view account statistics.">
+    <meta name="keywords" content="admin dashboard, account management, mail nafij, mailpro nafij, email administration">
+    <meta name="canonical" content="https://mailpro.nafij.me/admin">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://mailpro.nafij.me/admin">
+    <meta property="og:title" content="MailPro Nafij Admin Dashboard">
+    <meta property="og:description" content="Secure admin dashboard for managing MailPro Nafij accounts">
+    <meta property="og:site_name" content="MailPro Nafij">
+    <meta name="author" content="Nafij Rahaman">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "MailPro Nafij Admin",
+      "url": "https://mailpro.nafij.me/admin",
+      "description": "Admin dashboard for managing MailPro Nafij accounts"
+    }
+    </script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <!-- Admin Login Form -->
-        <div id="loginForm" class="card admin-login">
-            <h2>🔐 Admin Login processing</h2>
-            <div class="form-group">
-                <label for="adminPassword">Password:</label>
-                <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password">
+        <div id="loginForm" class="mailpro-card mailpro-admin-login">
+            <h2 class="mailpro-admin-title">MailPro Nafij Admin Authentication</h2>
+            <div class="mailpro-form-group">
+                <label for="adminPassword" class="mailpro-label">Admin Password:</label>
+                <input type="password" id="adminPassword" class="mailpro-form-control" placeholder="Enter MailPro admin password" aria-label="Admin password for MailPro Nafij">
             </div>
-            <button onclick="adminLogin()" class="btn btn-primary">Login</button>
-            <div id="loginMessage" class="status-message"></div>
+            <button onclick="adminLogin()" class="mailpro-btn mailpro-btn-primary" aria-label="Login to MailPro Nafij admin">Login</button>
+            <div id="loginMessage" class="mailpro-status-message" role="status" aria-live="polite"></div>
         </div>
 
         <!-- Admin Dashboard -->
         <div id="adminDashboard" style="display: none;">
-            <div class="header">
-                <h1>📧 Mail Service Admin</h1>
-                <p>Manage Gmail accounts and premium access</p>
-                <div class="header-actions">
-                    <a href="/" class="btn btn-secondary">🏠 Home</a>
-                    <a href="/logout" class="btn btn-secondary">🚪 Logout</a>
+            <div class="mailpro-header">
+                <h1 id="mailpro-admin-heading">MailPro Nafij Administration</h1>
+                <p class="mailpro-admin-description">Manage accounts and premium access control</p>
+                <div class="mailpro-header-actions" role="navigation" aria-label="Admin navigation">
+                    <a href="/" class="mailpro-btn mailpro-btn-secondary" title="Back to MailPro Nafij home">Home</a>
+                    <a href="/logout" class="mailpro-btn mailpro-btn-secondary" title="Logout from MailPro admin">Logout</a>
                 </div>
             </div>
-            
-            <div class="card">
-                <div class="stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalAccounts">-</div>
-                        <div class="stat-label">Total Accounts</div>
+
+            <div class="mailpro-card">
+                <div class="mailpro-stats">
+                    <div class="mailpro-stat-card" id="mailpro-stat-total">
+                        <div class="mailpro-stat-number" id="totalAccounts">-</div>
+                        <div class="mailpro-stat-label">Total Accounts</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="premiumAccounts">-</div>
-                        <div class="stat-label">Premium Accounts</div>
+                    <div class="mailpro-stat-card" id="mailpro-stat-premium">
+                        <div class="mailpro-stat-number" id="premiumAccounts">-</div>
+                        <div class="mailpro-stat-label">Premium Accounts</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="publicAccounts">-</div>
-                        <div class="stat-label">Public Accounts</div>
+                    <div class="mailpro-stat-card" id="mailpro-stat-public">
+                        <div class="mailpro-stat-number" id="publicAccounts">-</div>
+                        <div class="mailpro-stat-label">Public Accounts</div>
                     </div>
                 </div>
 
-                <div class="controls">
-                    <button class="btn btn-primary" onclick="loadAccounts()">🔄 Refresh Data</button>
-                    <a href="/auth/google" class="btn btn-primary">🔗 Connect New Account</a>
+                <div class="mailpro-controls" id="mailpro-admin-controls">
+                    <button class="mailpro-btn mailpro-btn-primary" onclick="loadAccounts()" aria-label="Refresh MailPro account list">Refresh Accounts</button>
+                    <a href="/auth/google" class="mailpro-btn mailpro-btn-primary" title="Connect a new Gmail account to MailPro">Connect New Account</a>
                 </div>
 
-                <div id="message"></div>
+                <div id="message" class="mailpro-message" role="status" aria-live="polite"></div>
 
-                <div class="table-container">
-                    <table id="accountsTable">
+                <div class="mailpro-table-container">
+                    <table id="accountsTable" role="grid" aria-label="MailPro Nafij connected accounts table">
                         <thead>
                             <tr>
-                                <th>📧 Email Address</th>
-                                <th>🏷️ Status</th>
-                                <th>📅 Created</th>
-                                <th>🕐 Last Accessed</th>
-                                <th>⚙️ Actions</th>
+                                <th role="columnheader">Email Address</th>
+                                <th role="columnheader">Account Status</th>
+                                <th role="columnheader">Created Date</th>
+                                <th role="columnheader">Last Accessed</th>
+                                <th role="columnheader">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="accountsTableBody">
                             <tr>
-                                <td colspan="5" class="loading">Please login to view accounts</td>
+                                <td colspan="5" class="mailpro-loading">Please login to view MailPro Nafij accounts</td>
                             </tr>
                         </tbody>
                     </table>
@@ -75,21 +94,43 @@
         </div>
     </div>
 
+    <footer class="mailpro-footer" id="mailpro-admin-footer" role="contentinfo">
+        <nav class="mailpro-footer-nav" aria-label="Footer navigation">
+            <a href="/" class="mailpro-footer-link">Home</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/inbox.html" class="mailpro-footer-link">Inbox</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/admin" class="mailpro-footer-link">Admin</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/author" class="mailpro-footer-link">Author</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/credits" class="mailpro-footer-link">Credits</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/privacy" class="mailpro-footer-link">Privacy</a>
+            <span class="mailpro-footer-divider">|</span>
+            <a href="/terms" class="mailpro-footer-link">Terms</a>
+        </nav>
+    </footer>
+
     <script>
+        // MailPro Nafij SEO Constants
+        const MAILPRO_SITE_NAME = 'MailPro Nafij';
+        const MAILPRO_ADMIN_CONTEXT = 'Administrator Panel';
+
         let isLoggedIn = false;
-        
+
         /**
          * Admin login function
          */
         async function adminLogin() {
             const password = document.getElementById('adminPassword').value;
             const messageDiv = document.getElementById('loginMessage');
-            
+
             if (!password) {
-                showLoginMessage('Please enter password', 'error');
+                showLoginMessage('Please enter MailPro Nafij admin password', 'error');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/admin/login', {
                     method: 'POST',
@@ -99,48 +140,47 @@
                     body: JSON.stringify({ password }),
                     credentials: 'include'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     isLoggedIn = true;
                     document.getElementById('loginForm').style.display = 'none';
                     document.getElementById('adminDashboard').style.display = 'block';
                     loadAccounts();
                 } else {
-                    showLoginMessage(result.error || 'Login failed', 'error');
+                    showLoginMessage(result.error || 'MailPro Nafij login failed', 'error');
                 }
-                
+
             } catch (error) {
                 console.error('Login error:', error);
-                showLoginMessage('Login failed: ' + error.message, 'error');
+                showLoginMessage('MailPro Nafij login error: ' + error.message, 'error');
             }
         }
-        
+
         /**
          * Show login message
          */
         function showLoginMessage(text, type = 'info') {
             const messageDiv = document.getElementById('loginMessage');
-            messageDiv.className = `status-message ${type}`;
+            messageDiv.className = `mailpro-status-message mailpro-status-${type}`;
             messageDiv.textContent = text;
             messageDiv.style.display = 'block';
-            
+
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 5000);
         }
-        
+
         /**
          * Display message to user (success or error)
          */
         function showMessage(text, type = 'success') {
             const messageDiv = document.getElementById('message');
-            messageDiv.className = `status-message ${type}`;
+            messageDiv.className = `mailpro-message mailpro-message-${type}`;
             messageDiv.textContent = text;
             messageDiv.style.display = 'block';
-            
-            // Auto-hide after 5 seconds
+
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 5000);
@@ -159,9 +199,9 @@
          */
         async function loadAccounts() {
             if (!isLoggedIn) return;
-            
+
             const tbody = document.getElementById('accountsTableBody');
-            tbody.innerHTML = '<tr><td colspan="5" class="loading">Loading accounts...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="mailpro-loading">Loading MailPro Nafij accounts...</td></tr>';
 
             try {
                 const response = await fetch('/accounts', {
@@ -175,32 +215,30 @@
                 const data = await response.json();
                 const accounts = data.accounts || [];
 
-                // Update statistics
                 updateStats(accounts);
 
                 if (accounts.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No accounts found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b; padding: 2rem;">No accounts connected to MailPro Nafij</td></tr>';
                     return;
                 }
 
-                // Generate table rows
                 tbody.innerHTML = accounts.map(account => `
                     <tr>
-                        <td class="email">${account.email}</td>
+                        <td class="mailpro-email">${account.email}</td>
                         <td>
-                            <span class="status ${account.isPremium ? 'status-premium' : 'status-public'}">
-                                ${account.isPremium ? '🔒 Premium' : '🌐 Public'}
+                            <span class="mailpro-status mailpro-status-${account.isPremium ? 'premium' : 'public'}">
+                                ${account.isPremium ? 'Premium' : 'Public'}
                             </span>
                         </td>
-                        <td class="date">${formatDate(account.createdAt)}</td>
-                        <td class="date">${formatDate(account.lastAccessed)}</td>
+                        <td class="mailpro-date">${formatDate(account.createdAt)}</td>
+                        <td class="mailpro-date">${formatDate(account.lastAccessed)}</td>
                         <td>
-                            <div class="actions">
-                                ${account.isPremium 
-                                    ? `<button class="btn btn-success" onclick="unlockAccount('${account.email}')">🔓 Unlock</button>`
-                                    : `<button class="btn btn-danger" onclick="lockAccount('${account.email}')">🔒 Lock</button>`
+                            <div class="mailpro-actions">
+                                ${account.isPremium
+                                    ? `<button class="mailpro-btn mailpro-btn-success" onclick="unlockAccount('${account.email}')">Unlock</button>`
+                                    : `<button class="mailpro-btn mailpro-btn-danger" onclick="lockAccount('${account.email}')">Lock</button>`
                                 }
-                                <a href="/inbox/${account.email}" class="btn btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">📬 View Inbox</a>
+                                <a href="/inbox/${account.email}" class="mailpro-btn mailpro-btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">View Inbox</a>
                             </div>
                         </td>
                     </tr>
@@ -208,7 +246,7 @@
 
             } catch (error) {
                 console.error('Error loading accounts:', error);
-                tbody.innerHTML = '<tr><td colspan="5" class="error">Failed to load accounts. Please check your admin permissions.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="mailpro-error">Failed to load MailPro Nafij accounts. Check admin permissions.</td></tr>';
                 showMessage('Failed to load accounts: ' + error.message, 'error');
             }
         }
@@ -219,19 +257,31 @@
         function updateStats(accounts) {
             const total = accounts.length;
             const premium = accounts.filter(acc => acc.isPremium).length;
-            const public = total - premium;
+            const pub = total - premium;
 
             document.getElementById('totalAccounts').textContent = total;
             document.getElementById('premiumAccounts').textContent = premium;
-            document.getElementById('publicAccounts').textContent = public;
+            document.getElementById('publicAccounts').textContent = pub;
         }
 
         /**
-         * Lock account (make it premium)
+         * Lock account (make it premium) with reason and optional expiry
          */
         async function lockAccount(email) {
-            if (!confirm(`Are you sure you want to lock account "${email}"? This will make it premium and restrict access.`)) {
+            const reason = prompt(`Enter reason for locking account "${email}":`);
+            if (reason === null) {
                 return;
+            }
+
+            if (!reason.trim()) {
+                showMessage('Lock reason cannot be empty', 'error');
+                return;
+            }
+
+            const expiry = prompt(`Enter expiry date (YYYY-MM-DD) or leave blank for no expiry:`);
+            const lockData = { reason: reason.trim() };
+            if (expiry && expiry.trim()) {
+                lockData.expiry = expiry;
             }
 
             try {
@@ -240,29 +290,31 @@
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify(lockData)
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showMessage(`✅ Account "${email}" has been locked successfully`, 'success');
-                    loadAccounts(); // Refresh the table
+                    showMessage(`Account "${email}" locked in MailPro Nafij - Reason: ${reason}`, 'success');
+                    loadAccounts();
                 } else {
                     throw new Error(result.error || 'Lock operation failed');
                 }
 
             } catch (error) {
                 console.error('Error locking account:', error);
-                showMessage('❌ Failed to lock account: ' + error.message, 'error');
+                showMessage('Failed to lock account: ' + error.message, 'error');
             }
         }
 
         /**
-         * Unlock account (make it public)
+         * Unlock account (make it public) with reason
          */
         async function unlockAccount(email) {
-            if (!confirm(`Are you sure you want to unlock account "${email}"? This will make it publicly accessible.`)) {
+            const reason = prompt(`Enter reason for unlocking account "${email}":`);
+            if (reason === null) {
                 return;
             }
 
@@ -272,21 +324,22 @@
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ reason: reason || 'No reason provided' })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showMessage(`✅ Account "${email}" has been unlocked successfully`, 'success');
-                    loadAccounts(); // Refresh the table
+                    showMessage(`Account "${email}" unlocked in MailPro Nafij`, 'success');
+                    loadAccounts();
                 } else {
                     throw new Error(result.error || 'Unlock operation failed');
                 }
 
             } catch (error) {
                 console.error('Error unlocking account:', error);
-                showMessage('❌ Failed to unlock account: ' + error.message, 'error');
+                showMessage('Failed to unlock account: ' + error.message, 'error');
             }
         }
 

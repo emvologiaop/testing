@@ -20,10 +20,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session configuration with fixed secret
+// Session configuration with environment-based secrets
 app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
-  keys: ['nafijpro25']
+  keys: (process.env.SESSION_KEYS || 'default-key').split(',')
 }));
 
 // Serve static files from public directory
@@ -82,12 +82,13 @@ process.on('SIGINT', async () => {
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'https://mail-service-pro.onrender.com/auth/google/callback'
+  process.env.OAUTH_CALLBACK_URL || 'https://mail-service-pro.onrender.com/auth/google/callback'
 );
 
 // OAuth scopes for Gmail and user profile access
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.send',
   'https://www.googleapis.com/auth/userinfo.email',
   'https://www.googleapis.com/auth/userinfo.profile'
 ];
@@ -154,6 +155,52 @@ const checkAccess = async (req, res, next) => {
 // Routes
 
 /**
+ * Helper: Extract body part from email payload
+ */
+function extractEmailPart(payload, mimeType) {
+  if (!payload) return null;
+
+  if (payload.mimeType === mimeType && payload.body.data) {
+    return Buffer.from(payload.body.data, 'base64').toString();
+  }
+
+  if (payload.parts) {
+    const part = payload.parts.find(p => p.mimeType === mimeType);
+    if (part && part.body.data) {
+      return Buffer.from(part.body.data, 'base64').toString();
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Helper: Get raw email as MIME string
+ */
+function getRawEmail(data) {
+  if (data.raw) {
+    return Buffer.from(data.raw, 'base64').toString();
+  }
+  return null;
+}
+
+/**
+ * Helper: Sanitize HTML to prevent script execution
+ */
+function sanitizeHtml(html) {
+  if (!html) return '';
+
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/on\w+\s*=\s*[^\s>]*/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/<embed\b[^<]*>/gi, '')
+    .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '');
+}
+
+/**
  * GET / - Landing page
  */
 app.get('/', (req, res) => {
@@ -172,6 +219,20 @@ app.get('/privacy', (req, res) => {
  */
 app.get('/terms', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
+/**
+ * GET /author - Author profile page
+ */
+app.get('/author', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'author.html'));
+});
+
+/**
+ * GET /credits - Credits and hosting thanks page
+ */
+app.get('/credits', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'credits.html'));
 });
 
 /**
@@ -321,58 +382,70 @@ app.get('/inbox/:email', checkAccess, async (req, res) => {
 });
 
 /**
- * GET /email/:email/:messageId - Get full email content
+ * GET /email/:email/:messageId - Get full email content with multi-view support
  */
 app.get('/email/:email/:messageId', checkAccess, async (req, res) => {
   try {
     const { account } = req;
     const { messageId } = req.params;
-    
+
     // Set up OAuth2 client with stored refresh token
     const accountOAuth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
       'https://mail-service-pro.onrender.com/auth/google/callback'
     );
-    
+
     accountOAuth.setCredentials({
       refresh_token: account.refreshToken
     });
-    
+
     // Initialize Gmail API
     const gmail = google.gmail({ version: 'v1', auth: accountOAuth });
-    
+
     // Get full message content
     const { data } = await gmail.users.messages.get({
       userId: 'me',
       id: messageId,
       format: 'full'
     });
-    
+
     const headers = data.payload.headers;
     const getHeader = (name) => headers.find(h => h.name === name)?.value || '';
-    
-    // Extract email body
-    let body = '';
-    if (data.payload.body.data) {
-      body = Buffer.from(data.payload.body.data, 'base64').toString();
-    } else if (data.payload.parts) {
-      const textPart = data.payload.parts.find(part => part.mimeType === 'text/plain');
-      if (textPart && textPart.body.data) {
-        body = Buffer.from(textPart.body.data, 'base64').toString();
-      }
+
+    // Extract all view formats
+    const plainText = extractEmailPart(data.payload, 'text/plain');
+    const htmlContent = extractEmailPart(data.payload, 'text/html');
+    const rawEmail = getRawEmail(data);
+
+    // Determine primary content type and auto-select initial view
+    let contentType = 'text';
+    let primaryContent = plainText || '';
+
+    if (htmlContent && !plainText) {
+      contentType = 'html';
+      primaryContent = sanitizeHtml(htmlContent);
+    } else if (htmlContent && plainText) {
+      contentType = 'multipart';
+      primaryContent = plainText;
     }
-    
+
     res.json({
       id: messageId,
       subject: getHeader('Subject'),
       from: getHeader('From'),
       to: getHeader('To'),
       date: getHeader('Date'),
-      body: body,
+      contentType: contentType,
+      views: {
+        raw: rawEmail || plainText || htmlContent || '',
+        html: htmlContent ? sanitizeHtml(htmlContent) : null,
+        text: plainText || null
+      },
+      body: primaryContent,
       snippet: data.snippet
     });
-    
+
   } catch (error) {
     console.error('❌ Email fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch email' });
@@ -386,25 +459,26 @@ app.get('/accounts', checkAdmin, async (req, res) => {
   try {
     // Check if MongoDB is connected
     if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: 'Database temporarily unavailable. Please try again later.',
         accounts: []
       });
     }
-    
+
     const accounts = await Account.find({}).select({
       email: 1,
       isPremium: 1,
+      lock: 1,
       createdAt: 1,
       lastAccessed: 1
     }).sort({ createdAt: -1 });
-    
+
     console.log(`👨‍💼 Admin requested accounts list`);
     res.json({ accounts });
-    
+
   } catch (error) {
     console.error('❌ Accounts fetch error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch accounts: ' + error.message,
       accounts: []
     });
@@ -462,33 +536,50 @@ app.get('/available-accounts', async (req, res) => {
 });
 
 /**
- * POST /admin/lock/:email - Lock account (make premium) - Admin only
+ * POST /admin/lock/:email - Lock account with reason and optional expiry - Admin only
+ * Body: { reason: string, expiry: optional ISO date string }
  */
 app.post('/admin/lock/:email', checkAdmin, async (req, res) => {
   try {
     const { email } = req.params;
-    
+    const { reason, expiry } = req.body;
+    const adminEmail = req.session.userEmail || 'admin';
+
+    if (!reason) {
+      return res.status(400).json({ error: 'Lock reason is required' });
+    }
+
     const account = await Account.findOne({ email: email.toLowerCase() });
-    
+
     if (!account) {
       return res.status(404).json({ error: 'Account not found' });
     }
-    
-    // Lock account (make premium)
+
+    // Lock account with metadata
     account.isPremium = true;
+    account.lock = {
+      isLocked: true,
+      reason: reason,
+      actor: adminEmail,
+      timestamp: new Date(),
+      expiry: expiry ? new Date(expiry) : null,
+      unlockHistory: account.lock?.unlockHistory || []
+    };
+
     await account.save();
-    
-    console.log(`🔒 Admin locked account: ${email}`);
-    
-    res.json({ 
-      success: true, 
+
+    console.log(`🔒 Admin locked account: ${email} (reason: ${reason})`);
+
+    res.json({
+      success: true,
       message: `Account ${email} locked`,
       account: {
         email: account.email,
-        isPremium: account.isPremium
+        isPremium: account.isPremium,
+        lock: account.lock
       }
     });
-    
+
   } catch (error) {
     console.error('❌ Account lock error:', error);
     res.status(500).json({ error: 'Failed to lock account' });
@@ -497,35 +588,151 @@ app.post('/admin/lock/:email', checkAdmin, async (req, res) => {
 
 /**
  * POST /admin/unlock/:email - Unlock account (make public) - Admin only
+ * Body: { reason: optional unlock reason }
  */
 app.post('/admin/unlock/:email', checkAdmin, async (req, res) => {
   try {
     const { email } = req.params;
-    
+    const { reason } = req.body;
+    const adminEmail = req.session.userEmail || 'admin';
+
     const account = await Account.findOne({ email: email.toLowerCase() });
-    
+
     if (!account) {
       return res.status(404).json({ error: 'Account not found' });
     }
-    
+
+    // Record unlock in history before unlocking
+    if (!account.lock) {
+      account.lock = {
+        isLocked: false,
+        reason: null,
+        actor: null,
+        timestamp: null,
+        expiry: null,
+        unlockHistory: []
+      };
+    }
+
+    if (account.lock.isLocked) {
+      account.lock.unlockHistory.push({
+        unlockedAt: new Date(),
+        unlockedBy: adminEmail,
+        reason: reason || 'No reason provided'
+      });
+    }
+
     // Unlock account (make public)
     account.isPremium = false;
+    account.lock.isLocked = false;
+
     await account.save();
-    
+
     console.log(`🔓 Admin unlocked account: ${email}`);
-    
-    res.json({ 
-      success: true, 
+
+    res.json({
+      success: true,
       message: `Account ${email} unlocked`,
       account: {
         email: account.email,
-        isPremium: account.isPremium
+        isPremium: account.isPremium,
+        lock: account.lock
       }
     });
-    
+
   } catch (error) {
     console.error('❌ Account unlock error:', error);
     res.status(500).json({ error: 'Failed to unlock account' });
+  }
+});
+
+/**
+ * GET /admin/lock-history/:email - Get lock/unlock history for an account - Admin only
+ */
+app.get('/admin/lock-history/:email', checkAdmin, async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const account = await Account.findOne({ email: email.toLowerCase() });
+
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const lockData = account.lock || {
+      isLocked: false,
+      reason: null,
+      actor: null,
+      timestamp: null,
+      expiry: null,
+      unlockHistory: []
+    };
+
+    res.json({
+      email: account.email,
+      currentLockStatus: {
+        isLocked: lockData.isLocked,
+        reason: lockData.reason,
+        actor: lockData.actor,
+        timestamp: lockData.timestamp,
+        expiry: lockData.expiry
+      },
+      unlockHistory: lockData.unlockHistory || [],
+      totalUnlocks: (lockData.unlockHistory || []).length
+    });
+
+  } catch (error) {
+    console.error('❌ Lock history fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch lock history' });
+  }
+});
+
+/**
+ * GET /admin/accounts/search - Search and filter accounts - Admin only
+ * Query params: search (email), locked (true/false), premium (true/false)
+ */
+app.get('/admin/accounts/search', checkAdmin, async (req, res) => {
+  try {
+    const { search, locked, premium } = req.query;
+
+    let query = {};
+
+    if (search) {
+      query.email = { $regex: search, $options: 'i' };
+    }
+
+    if (locked !== undefined) {
+      const isLocked = locked === 'true';
+      query['lock.isLocked'] = isLocked;
+    }
+
+    if (premium !== undefined) {
+      const isPremium = premium === 'true';
+      query.isPremium = isPremium;
+    }
+
+    const accounts = await Account.find(query).select({
+      email: 1,
+      isPremium: 1,
+      lock: 1,
+      createdAt: 1,
+      lastAccessed: 1
+    }).sort({ createdAt: -1 });
+
+    const total = accounts.length;
+    const locked_count = accounts.filter(a => a.lock?.isLocked).length;
+    const premium_count = accounts.filter(a => a.isPremium).length;
+
+    res.json({
+      total,
+      locked_count,
+      premium_count,
+      accounts
+    });
+
+  } catch (error) {
+    console.error('❌ Account search error:', error);
+    res.status(500).json({ error: 'Failed to search accounts' });
   }
 });
 
@@ -541,8 +748,9 @@ app.get('/admin', (req, res) => {
  */
 app.post('/admin/login', (req, res) => {
   const { password } = req.body;
-  
-  if (password === 'nafijpro++') {
+  const adminPassword = process.env.ADMIN_PASSWORD || 'nafijpro++';
+
+  if (password === adminPassword) {
     req.session.isAdmin = true;
     res.json({ success: true, message: 'Admin login successful' });
   } else {
@@ -551,11 +759,192 @@ app.post('/admin/login', (req, res) => {
 });
 
 /**
- * GET /logout - Clear user session
+ * POST /send - Send email via Gmail API
+ * Requires: email (sender), to (recipient), subject, body
+ * Features: validation, rate-limiting, activity tracking
  */
-app.get('/logout', (req, res) => {
-  req.session = null;
-  res.redirect('/');
+app.post('/send', async (req, res) => {
+  try {
+    const { email, to, subject, body, cc, bcc } = req.body;
+    const userEmail = req.session.userEmail;
+
+    // Validation
+    if (!email || !to || !subject || !body) {
+      return res.status(400).json({
+        error: 'Missing required fields: email, to, subject, body'
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || !emailRegex.test(to)) {
+      return res.status(400).json({
+        error: 'Invalid email address format'
+      });
+    }
+
+    // Access control: user can only send from their own accounts
+    if (userEmail !== email.toLowerCase()) {
+      return res.status(403).json({
+        error: 'You can only send emails from your own account'
+      });
+    }
+
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        error: 'Database temporarily unavailable. Please try again later.'
+      });
+    }
+
+    // Find the account
+    const account = await Account.findOne({ email: email.toLowerCase() });
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    // Rate limiting: check last email sent time
+    const RATE_LIMIT_INTERVAL = 2000; // 2 seconds between emails
+    if (account.lastSentEmail) {
+      const timeSinceLastEmail = Date.now() - new Date(account.lastSentEmail).getTime();
+      if (timeSinceLastEmail < RATE_LIMIT_INTERVAL) {
+        return res.status(429).json({
+          error: 'Please wait before sending another email',
+          retryAfter: Math.ceil((RATE_LIMIT_INTERVAL - timeSinceLastEmail) / 1000)
+        });
+      }
+    }
+
+    // Set up OAuth2 client with stored refresh token
+    const accountOAuth = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      'https://mail-service-pro.onrender.com/auth/google/callback'
+    );
+
+    accountOAuth.setCredentials({
+      refresh_token: account.refreshToken
+    });
+
+    // Initialize Gmail API
+    const gmail = google.gmail({ version: 'v1', auth: accountOAuth });
+
+    // Construct email message
+    const recipients = [to];
+    if (cc) recipients.push(...cc.split(',').map(e => e.trim()));
+
+    const emailMessage = [
+      `From: ${email}`,
+      `To: ${to}`,
+      cc ? `Cc: ${cc}` : '',
+      `Subject: ${subject}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      'MIME-Version: 1.0',
+      '',
+      body
+    ].filter(Boolean).join('\n');
+
+    // Encode to base64 for Gmail API
+    const encodedMessage = Buffer.from(emailMessage).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    // Send the email
+    const sendRes = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage
+      }
+    });
+
+    // Extract recipient name from email if available
+    const recipientName = to.split('@')[0];
+
+    // Record sending activity in database
+    account.lastSentEmail = new Date();
+    account.sendingActivity.push({
+      timestamp: new Date(),
+      recipientEmail: to,
+      recipientName: recipientName,
+      subject: subject,
+      status: 'success'
+    });
+
+    // Keep only last 50 sending activities for storage efficiency
+    if (account.sendingActivity.length > 50) {
+      account.sendingActivity = account.sendingActivity.slice(-50);
+    }
+
+    await account.save();
+
+    console.log(`📧 Email sent from ${email} to ${to}: "${subject}"`);
+
+    res.json({
+      success: true,
+      message: 'Email sent successfully',
+      messageId: sendRes.data.id,
+      recipient: to,
+      subject: subject
+    });
+
+  } catch (error) {
+    console.error('❌ Send email error:', error.message);
+
+    // Try to record failed attempt
+    try {
+      const { email } = req.body;
+      if (email) {
+        const account = await Account.findOne({ email: email.toLowerCase() });
+        if (account) {
+          const recipientName = req.body.to ? req.body.to.split('@')[0] : 'unknown';
+          account.sendingActivity.push({
+            timestamp: new Date(),
+            recipientEmail: req.body.to || 'unknown',
+            recipientName: recipientName,
+            subject: req.body.subject || 'unknown',
+            status: 'failed',
+            errorMessage: error.message
+          });
+          await account.save();
+        }
+      }
+    } catch (dbError) {
+      console.error('❌ Failed to record send error:', dbError.message);
+    }
+
+    res.status(500).json({
+      error: 'Failed to send email',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /sending-activity/:email - Get sending activity for an account (Admin only)
+ */
+app.get('/sending-activity/:email', checkAdmin, async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const account = await Account.findOne({ email: email.toLowerCase() });
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    // Return last 20 sending activities
+    const activity = account.sendingActivity.slice(-20).reverse();
+
+    res.json({
+      email: account.email,
+      totalSent: account.sendingActivity.length,
+      recentActivity: activity
+    });
+
+  } catch (error) {
+    console.error('❌ Sending activity fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch sending activity' });
+  }
 });
 
 // Error handling middleware
@@ -571,9 +960,10 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
+  const adminPassword = process.env.ADMIN_PASSWORD || 'nafijpro++';
   console.log(`🚀 Mail Service running on port ${PORT}`);
   console.log(`📧 Gmail OAuth2 service ready`);
-  console.log(`👨‍💼 Admin password: nafijpro++`);
+  console.log(`👨‍💼 Admin mode enabled (password configured via environment)`);
 });
 
 module.exports = app;
