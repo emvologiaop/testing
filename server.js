@@ -1009,12 +1009,14 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  const adminPassword = process.env.ADMIN_PASSWORD || 'nafijpro++';
-  console.log(`🚀 Mail Service running on port ${PORT}`);
-  console.log(`📧 Gmail OAuth2 service ready`);
-  console.log(`👨‍💼 Admin mode enabled (password configured via environment)`);
-});
+// Start server only if running directly (not as module for Vercel)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    const adminPassword = process.env.ADMIN_PASSWORD || 'nafijpro++';
+    console.log(`🚀 Mail Service running on port ${PORT}`);
+    console.log(`📧 Gmail OAuth2 service ready`);
+    console.log(`👨‍💼 Admin mode enabled (password configured via environment)`);
+  });
+}
 
 module.exports = app;
