@@ -14,14 +14,7 @@
     <meta property="twitter:description" content="Special thanks to our contributors and hosting partners">
     <meta name="canonical" content="https://mailpro.nafij.me/credits">
     <title>Credits - Mail Service</title>
-    <link rel="stylesheet" href="style.css">
-    <script>
-        (function() {
-            const theme = localStorage.getItem('theme-preference') ||
-                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    <link rel="stylesheet" href="global.css">
 </head>
 <body>
     <header class="mailpro-navbar" role="banner">
@@ -177,6 +170,7 @@
         </p>
     </div>
 
+    <script src="global.js" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('themeToggle');

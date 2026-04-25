@@ -29,14 +29,7 @@
       "image": "https://mailpro.nafij.me/mailpro-nafij.svg"
     }
     </script>
-    <link rel="stylesheet" href="style.css">
-    <script>
-        (function() {
-            const theme = localStorage.getItem('theme-preference') ||
-                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-        })();
-    </script>
+    <link rel="stylesheet" href="global.css">
 </head>
 <body>
     <header class="mailpro-navbar" role="banner">
@@ -378,22 +371,6 @@
         }, 30000);
     </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                themeToggle.addEventListener('click', () => {
-                    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-                    const next = current === 'dark' ? 'light' : 'dark';
-                    document.documentElement.setAttribute('data-theme', next);
-                    localStorage.setItem('theme-preference', next);
-                    themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
-                });
-
-                const currentTheme = localStorage.getItem('theme-preference') || 'dark';
-                themeToggle.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
-            }
-        });
-    </script>
+    <script src="global.js" defer></script>
 </body>
 </html>

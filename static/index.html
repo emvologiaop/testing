@@ -47,16 +47,7 @@
       }
     }
     </script>
-    <link rel="stylesheet" href="style.css">
-    <script>
-        // Theme initialization - prevent flash of wrong theme
-        (function() {
-            const theme = localStorage.getItem('theme-preference') ||
-                         (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
-            document.documentElement.style.colorScheme = theme;
-        })();
-    </script>
+    <link rel="stylesheet" href="global.css">
 </head>
 <body>
     <header class="mailpro-navbar" role="banner">
@@ -115,5 +106,6 @@
             <p class="mailpro-copyright">MailPro Nafij - Secure Gmail management by Nafij Rahaman</p>
         </footer>
     </div>
+    <script src="global.js" defer></script>
 </body>
 </html>
