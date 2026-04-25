@@ -27,7 +27,7 @@ app.use(cookieSession({
 }));
 
 // Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'static')));
 
 // MongoDB Connection with improved configuration
 const mongoUri = process.env.MONGO_URI || 'mongodb+srv://nafijrahaman2026:nafijpro++@mail-service.tirbgc7.mongodb.net/mail-service?retryWrites=true&w=majority&appName=mail-service';
